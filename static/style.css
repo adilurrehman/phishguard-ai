@@ -27,6 +27,7 @@ body {
     padding: 0.7rem 1.05rem;
     min-width: 6.25rem;
     background: rgba(15, 23, 42, 0.22);
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), background-color 280ms ease, border-color 280ms ease, box-shadow 280ms ease;
     white-space: nowrap;

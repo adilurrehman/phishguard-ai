@@ -69,9 +69,7 @@ def home():
 
         url = request.form['url']
 
-        prediction, risk_score = predict_url(url)
-
-        reasons = generate_reasons(url)
+        prediction, risk_score, reasons = predict_url(url)
 
         # DATABASE SAVE
         user_id = session['user_id']

@@ -1,6 +1,7 @@
 import joblib
 from ml_model.live_features import extract_live_features
 from app.domain_age_check import check_domain_age, get_domain_age_penalty
+from app.brand_impersonation import detect_brand_impersonation, get_brand_risk_level
 
 model = joblib.load('ml_model/phishing_model.pkl')
 
@@ -8,7 +9,8 @@ def predict_url(url):
     """
     Predict if a URL is phishing using a layered approach:
     Layer 1: Domain Age Check (NEW domains = HIGH RISK)
-    Layer 2: ML Model (Feature-based detection)
+    Layer 2: Brand Impersonation Detection (TYPOSQUATTING)
+    Layer 3: ML Model (Feature-based detection)
     """
     
     # LAYER 1: DOMAIN AGE CHECK (Critical)
@@ -29,7 +31,17 @@ def predict_url(url):
                 "Established services maintain domains for years"
             ]
     
-    # LAYER 2: ML MODEL (Feature-based)
+    # LAYER 2: BRAND IMPERSONATION DETECTION (Typosquatting)
+    is_impersonation, impersonation_risk, impersonation_reasons = detect_brand_impersonation(url)
+    
+    if is_impersonation and impersonation_risk >= 45:
+        # Critical brand impersonation detected
+        return "PHISHING", 92, impersonation_reasons + [
+            "Brand impersonation is a primary phishing tactic",
+            "Attackers use known brands to build false trust"
+        ]
+    
+    # LAYER 3: ML MODEL (Feature-based)
     features = extract_live_features(url)
     prediction = model.predict([features])[0]
     probability = model.predict_proba([features])[0]
@@ -40,14 +52,21 @@ def predict_url(url):
     if age_penalty > 1.0:
         risk_score = min(risk_score * age_penalty, 100)
     
+    # Apply brand impersonation penalty if available
+    brand_penalty, brand_reasons = get_brand_risk_level(url)
+    if brand_penalty > 1.0:
+        risk_score = min(risk_score * brand_penalty, 100)
+    
     if prediction == 1:
         label = "PHISHING"
     else:
         label = "LEGITIMATE"
     
-    # Generate reasons based on model
+    # Generate reasons based on all layers
     reasons = [f"ML Model Confidence: {max(probability)*100:.1f}%"]
     if age_penalty > 1.0:
-        reasons.append(penalty_reason)
+        reasons.extend([penalty_reason])
+    if brand_penalty > 1.0:
+        reasons.extend(brand_reasons)
     
     return label, risk_score, reasons

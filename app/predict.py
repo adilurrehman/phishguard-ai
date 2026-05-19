@@ -2,6 +2,7 @@ import joblib
 from ml_model.live_features import extract_live_features
 from app.domain_age_check import check_domain_age, get_domain_age_penalty
 from app.brand_impersonation import detect_brand_impersonation, get_brand_risk_level
+from app.entropy_analysis import analyze_domain_entropy, get_entropy_penalty
 
 model = joblib.load('ml_model/phishing_model.pkl')
 
@@ -10,7 +11,8 @@ def predict_url(url):
     Predict if a URL is phishing using a layered approach:
     Layer 1: Domain Age Check (NEW domains = HIGH RISK)
     Layer 2: Brand Impersonation Detection (TYPOSQUATTING)
-    Layer 3: ML Model (Feature-based detection)
+    Layer 3: Entropy Analysis (RANDOMNESS = SUSPICIOUS)
+    Layer 4: ML Model (Feature-based detection)
     """
     
     # LAYER 1: DOMAIN AGE CHECK (Critical)
@@ -41,7 +43,18 @@ def predict_url(url):
             "Attackers use known brands to build false trust"
         ]
     
-    # LAYER 3: ML MODEL (Feature-based)
+    # LAYER 3: ENTROPY ANALYSIS (Randomness detection)
+    entropy, entropy_is_suspicious, entropy_risk, entropy_reason = analyze_domain_entropy(url)
+    
+    if entropy_is_suspicious and entropy > 4.2:
+        # Extremely high entropy (random domain name)
+        return "PHISHING", 88, [
+            entropy_reason,
+            "Random domain names are used to bypass security filters",
+            "Legitimate businesses use recognizable domain names"
+        ]
+    
+    # LAYER 4: ML MODEL (Feature-based)
     features = extract_live_features(url)
     prediction = model.predict([features])[0]
     probability = model.predict_proba([features])[0]
@@ -57,6 +70,11 @@ def predict_url(url):
     if brand_penalty > 1.0:
         risk_score = min(risk_score * brand_penalty, 100)
     
+    # Apply entropy penalty if available
+    entropy_penalty, entropy_penalty_reason = get_entropy_penalty(url)
+    if entropy_penalty > 1.0:
+        risk_score = min(risk_score * entropy_penalty, 100)
+    
     if prediction == 1:
         label = "PHISHING"
     else:
@@ -68,5 +86,7 @@ def predict_url(url):
         reasons.extend([penalty_reason])
     if brand_penalty > 1.0:
         reasons.extend(brand_reasons)
+    if entropy_penalty > 1.0 and entropy_penalty_reason:
+        reasons.append(entropy_penalty_reason)
     
     return label, risk_score, reasons

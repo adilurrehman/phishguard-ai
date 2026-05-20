@@ -36,6 +36,14 @@
                 History
             </a>
 
+            {% if session.get('is_admin') %}
+
+            <a class="nav-link navbar-pill-link" href="/admin/feedback">
+                Feedback Review
+            </a>
+
+            {% endif %}
+
             <a class="nav-link navbar-pill-link navbar-pill-danger" href="/logout">
                 Logout
             </a>

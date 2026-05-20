@@ -1,10 +1,10 @@
-from flask import Flask, request, render_template, redirect, session, make_response
+from flask import Flask, request, render_template, redirect, session, make_response, jsonify
+import validators
 from datetime import datetime, timedelta
-from app.predict import predict_url
+from app.analysis_engine import analyze_url
 from app.db import get_db_connection
-from app.explanations import generate_reasons
 from app.auth import hash_password, verify_password
-from app.security import login_required
+from app.security import login_required, admin_required
 
 app = Flask(__name__)
 
@@ -57,6 +57,149 @@ def apply_security_headers(response):
 
     return response
 
+
+@app.route('/feedback', methods=['POST'])
+@login_required
+def feedback():
+
+    url = request.form['url']
+    predicted_label = request.form['predicted_label']
+    risk_score = request.form['risk_score']
+    feedback_value = request.form['feedback']
+
+    # DETERMINE TRUE LABEL
+    if feedback_value == 'correct':
+
+        correct_label = predicted_label
+
+    else:
+
+        if predicted_label == 'PHISHING':
+            correct_label = 'LEGITIMATE'
+
+        else:
+            correct_label = 'PHISHING'
+
+    user_id = session['user_id']
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        INSERT INTO feedback
+        (
+            user_id,
+            url,
+            predicted_label,
+            correct_label,
+            risk_score,
+            feedback,
+            review_status
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, 'PENDING')
+        """,
+        (
+            user_id,
+            url,
+            predicted_label,
+            correct_label,
+            risk_score,
+            feedback_value,
+        )
+    )
+
+    cur.execute(
+        """
+        INSERT INTO audit_logs (action)
+        VALUES (%s)
+        """,
+        (f"Feedback submitted for URL: {url} ({feedback_value})",)
+    )
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.accept_mimetypes.best == 'application/json':
+        return jsonify({"status": "ok"})
+
+    return redirect('/')
+
+
+@app.route('/admin/feedback', methods=['GET', 'POST'])
+@admin_required
+def admin_feedback():
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    if request.method == 'POST':
+
+        feedback_id = request.form.get('feedback_id', '').strip()
+        action = request.form.get('action', '').strip().upper()
+        review_notes = request.form.get('review_notes', '').strip()
+
+        if feedback_id.isdigit() and action in {'APPROVED', 'REJECTED'}:
+
+            cur.execute(
+                """
+                UPDATE feedback
+                SET review_status = %s,
+                    reviewed_by = %s,
+                    reviewed_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+                """,
+                (
+                    action,
+                    session['user_id'],
+                    int(feedback_id),
+                )
+            )
+
+            cur.execute(
+                """
+                INSERT INTO audit_logs (action)
+                VALUES (%s)
+                """,
+                (f"Feedback {action.lower()} by admin for id={feedback_id}: {review_notes}",)
+            )
+
+            conn.commit()
+
+    cur.execute(
+        """
+        SELECT
+            f.id,
+            u.username,
+            f.url,
+            f.predicted_label,
+            f.correct_label,
+            f.risk_score,
+            f.feedback,
+            f.review_status,
+            f.created_at,
+            f.reviewed_at
+        FROM feedback f
+        LEFT JOIN users u ON f.user_id = u.id
+        ORDER BY f.created_at DESC
+        """
+    )
+
+    feedback_rows = cur.fetchall()
+
+    pending_count = sum(1 for row in feedback_rows if row[7] == 'PENDING')
+
+    cur.close()
+    conn.close()
+
+    return render_template(
+        'admin_feedback.html',
+        feedback_rows=feedback_rows,
+        pending_count=pending_count,
+    )
+
 @app.route('/', methods=['GET', 'POST'])
 def home():
 
@@ -67,9 +210,22 @@ def home():
 
     if request.method == 'POST':
 
-        url = request.form['url']
+        url = request.form.get('url', '')
+        url = url.strip()
 
-        prediction, risk_score, reasons = predict_url(url)
+        # EMPTY CHECK
+        if not url:
+            return render_template('index.html', error="URL cannot be empty")
+
+        # URL FORMAT VALIDATION
+        if not validators.url(url):
+            return render_template('index.html', error="Invalid URL format")
+
+        analysis = analyze_url(url)
+        prediction = analysis['prediction']
+        risk_score = analysis['risk_score']
+        reasons = analysis['reasons']
+        safety_tips = analysis['safety_tips']
 
         # DATABASE SAVE
         user_id = session['user_id']
@@ -108,7 +264,8 @@ def home():
             'url': url,
             'prediction': prediction,
             'risk_score': risk_score,
-            'reasons': reasons
+            'reasons': reasons,
+            'safety_tips': safety_tips,
         }
 
     return render_template('index.html', result=result)
@@ -179,6 +336,22 @@ def history():
         SELECT COUNT(*)
         FROM scanned_urls
         WHERE user_id = %s
+        AND prediction = 'SUSPICIOUS'
+        AND url ILIKE %s
+        """,
+        (
+            user_id,
+            f'%{search}%'
+        )
+    )
+
+    suspicious_count = cur.fetchone()[0]
+
+    cur.execute(
+        """
+        SELECT COUNT(*)
+        FROM scanned_urls
+        WHERE user_id = %s
         AND prediction = 'LEGITIMATE'
         AND url ILIKE %s
         """,
@@ -198,6 +371,7 @@ def history():
         scans=scans,
         total_scans=total_scans,
         phishing_count=phishing_count,
+        suspicious_count=suspicious_count,
         safe_count=safe_count
     )
 
@@ -235,6 +409,19 @@ def dashboard():
 
     phishing_count = cur.fetchone()[0]
 
+    # SUSPICIOUS COUNT
+    cur.execute(
+        """
+        SELECT COUNT(*)
+        FROM scanned_urls
+        WHERE user_id = %s
+        AND prediction = 'SUSPICIOUS'
+        """,
+        (user_id,)
+    )
+
+    suspicious_count = cur.fetchone()[0]
+
     # SAFE COUNT
     cur.execute(
         """
@@ -264,12 +451,12 @@ def dashboard():
         average_risk = 0
 
     # THREAT LEVEL CLASSIFICATION
-    if average_risk < 40:
-        threat_level = "LOW"
-    elif average_risk < 70:
-        threat_level = "MEDIUM"
+    if average_risk < 30:
+        threat_level = "SAFE"
+    elif average_risk < 60:
+        threat_level = "SUSPICIOUS"
     else:
-        threat_level = "HIGH"
+        threat_level = "PHISHING"
 
     # RECENT SCANS
     cur.execute(
@@ -338,6 +525,7 @@ def dashboard():
         'dashboard.html',
         total_scans=total_scans,
         phishing_count=phishing_count,
+        suspicious_count=suspicious_count,
         safe_count=safe_count,
         average_risk=round(average_risk, 2),
         threat_level=threat_level,
@@ -392,7 +580,7 @@ def login():
 
         cur.execute(
             """
-            SELECT id, username, password_hash
+            SELECT id, username, password_hash, is_admin
             FROM users
             WHERE email = %s
             """,
@@ -409,6 +597,7 @@ def login():
             user_id = user[0]
             username = user[1]
             hashed_password = user[2]
+            is_admin = bool(user[3])
 
             if verify_password(password, hashed_password):
 
@@ -418,6 +607,7 @@ def login():
 
                 session['user_id'] = user_id
                 session['username'] = username
+                session['is_admin'] = is_admin
 
                 return redirect('/')
 

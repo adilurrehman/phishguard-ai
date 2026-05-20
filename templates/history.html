@@ -61,6 +61,20 @@
 
             <div class="card p-4 text-center">
 
+                <h5>Suspicious URLs</h5>
+
+                <h2 class="risk-medium">
+                    {{ suspicious_count }}
+                </h2>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card p-4 text-center">
+
                 <h5>Safe URLs</h5>
 
                 <h2 class="risk-low">
@@ -143,15 +157,21 @@
 
                                 <td>
 
-                                    {% if scan[1] == 'PHISHING' %}
+                                    {% if scan[1] == 'SAFE' %}
 
-                                        <span class="risk-high">
+                                        <span class="risk-low">
+                                            {{ scan[1] }}
+                                        </span>
+
+                                    {% elif scan[1] == 'SUSPICIOUS' %}
+
+                                        <span class="risk-medium">
                                             {{ scan[1] }}
                                         </span>
 
                                     {% else %}
 
-                                        <span class="risk-low">
+                                        <span class="risk-high">
                                             {{ scan[1] }}
                                         </span>
 

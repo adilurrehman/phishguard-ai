@@ -7,6 +7,7 @@
         "/^cd \"D:/Semester 4/AI/Project/PhishGuard-AI/ml_model\" && python train_model\\.py$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        "\"d:/Semester": true
     }
 }

@@ -7,6 +7,10 @@
 
     <title>Dashboard</title>
 
+    <script>
+        document.documentElement.classList.add('page-loading');
+    </script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link
@@ -25,7 +29,45 @@
 
 {% include 'navbar.html' %}
 
-<div class="container mt-5">
+<div class="container mt-5 page-skeleton dashboard-skeleton" aria-hidden="true">
+
+    <div class="skeleton-card mb-4" style="height: 2.8rem; width: 18rem;"></div>
+
+    <div class="row g-4">
+
+        <div class="col-12 col-sm-6 col-xl-3"><div class="skeleton-card"></div></div>
+        <div class="col-12 col-sm-6 col-xl-3"><div class="skeleton-card"></div></div>
+        <div class="col-12 col-sm-6 col-xl-3"><div class="skeleton-card"></div></div>
+        <div class="col-12 col-sm-6 col-xl-3"><div class="skeleton-card"></div></div>
+        <div class="col-12 col-sm-6 col-xl-3"><div class="skeleton-card"></div></div>
+
+    </div>
+
+    <div class="row g-4 mt-5 mb-4">
+
+        <div class="col-12 col-lg-6">
+            <div class="skeleton-card skeleton-chart"></div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="skeleton-card skeleton-chart"></div>
+        </div>
+
+    </div>
+
+    <div class="skeleton-card">
+
+        <div class="skeleton-line" style="width: 36%;"></div>
+        <div class="skeleton-table-row mt-4"></div>
+        <div class="skeleton-table-row"></div>
+        <div class="skeleton-table-row"></div>
+        <div class="skeleton-table-row"></div>
+
+    </div>
+
+</div>
+
+<div class="container mt-5 page-content">
 
     <h1 class="mb-4">
         Security Dashboard
@@ -330,6 +372,10 @@ new Chart(
         }
     }
 );
+
+window.addEventListener('load', () => {
+    document.documentElement.classList.remove('page-loading');
+});
 
 </script>
 

@@ -20,6 +20,11 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 
+def wants_json_response():
+
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.accept_mimetypes.best == 'application/json'
+
+
 @app.before_request
 def session_management():
 
@@ -122,7 +127,7 @@ def feedback():
     cur.close()
     conn.close()
 
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.accept_mimetypes.best == 'application/json':
+    if wants_json_response():
         return jsonify({"status": "ok"})
 
     return redirect('/')
@@ -215,10 +220,16 @@ def home():
 
         # EMPTY CHECK
         if not url:
+            if wants_json_response():
+                return jsonify({'error': 'URL cannot be empty'}), 400
+
             return render_template('index.html', error="URL cannot be empty")
 
         # URL FORMAT VALIDATION
         if not validators.url(url):
+            if wants_json_response():
+                return jsonify({'error': 'Invalid URL format'}), 400
+
             return render_template('index.html', error="Invalid URL format")
 
         analysis = analyze_url(url)
@@ -267,6 +278,9 @@ def home():
             'reasons': reasons,
             'safety_tips': safety_tips,
         }
+
+    if wants_json_response() and request.method == 'POST':
+        return jsonify({'result_html': render_template('_analysis_result.html', result=result)})
 
     return render_template('index.html', result=result)
 
@@ -374,6 +388,118 @@ def history():
         suspicious_count=suspicious_count,
         safe_count=safe_count
     )
+
+
+@app.route('/developer')
+@login_required
+def developer():
+    developer_profile = {
+        'name': 'Adil ur Rehman Kakar',
+        'role': 'Full Stack Web Developer',
+        'headline': 'Creator of PhishGuard AI',
+        'education': 'Student at UET, Lahore, Pakistan',
+        'bio': (
+            'Passionate about building innovative web solutions that solve real-world problems. '
+            'I specialize in creating modern, responsive, and user-friendly web applications '
+            'using practical technology choices and clean product thinking.'
+        ),
+        'avatar_url': '/static/images/adil-avatar.webp',
+        'stats': [
+            {'value': '10+', 'label': 'Projects completed'},
+            {'value': '2+', 'label': 'Years experience'},
+            {'value': '100%', 'label': 'Client satisfaction'},
+        ],
+        'skills': [
+            'Python',
+            'Flask',
+            'JavaScript',
+            'Bootstrap',
+            'HTML5',
+            'CSS3',
+            'React',
+            'Node.js',
+            'Git',
+            'MongoDB',
+        ],
+        'links': [
+            {'label': 'Email', 'href': 'mailto:adilurrehmanofficial@gmail.com', 'icon': 'bi-envelope-fill', 'variant': 'email'},
+            {'label': 'LinkedIn', 'href': 'https://linkedin.com/in/adilurrehmanofficial', 'icon': 'bi-linkedin', 'variant': 'linkedin'},
+            {'label': 'Instagram', 'href': 'https://instagram.com/adilurrehmanofficial', 'icon': 'bi-instagram', 'variant': 'instagram'},
+            {'label': 'GitHub', 'href': 'https://github.com/adilurrehman', 'icon': 'bi-github', 'variant': 'github'},
+        ],
+        'highlights': [
+            {
+                'title': 'Security-first thinking',
+                'text': 'Builds products that protect users and surface risks clearly, which matches the goal behind PhishGuard AI.'
+            },
+            {
+                'title': 'Full-stack execution',
+                'text': 'Comfortable moving from interface design to backend logic and practical delivery.'
+            },
+            {
+                'title': 'User-centered UI',
+                'text': 'Focuses on making the experience understandable, responsive, and easy to trust.'
+            },
+        ],
+    }
+
+    return render_template('developer.html', developer=developer_profile)
+
+
+@app.route('/developer/data')
+@login_required
+def developer_data():
+    developer_profile = {
+        'name': 'Adil ur Rehman Kakar',
+        'role': 'Full Stack Web Developer',
+        'headline': 'Creator of PhishGuard AI',
+        'education': 'Student at UET, Lahore, Pakistan',
+        'bio': (
+            'Passionate about building innovative web solutions that solve real-world problems. '
+            'I specialize in creating modern, responsive, and user-friendly web applications '
+            'using practical technology choices and clean product thinking.'
+        ),
+        'avatar_url': '/static/images/adil-avatar.webp',
+        'stats': [
+            {'value': '10+', 'label': 'Projects completed'},
+            {'value': '2+', 'label': 'Years experience'},
+            {'value': '100%', 'label': 'Client satisfaction'},
+        ],
+        'skills': [
+            'Python',
+            'Flask',
+            'JavaScript',
+            'Bootstrap',
+            'HTML5',
+            'CSS3',
+            'React',
+            'Node.js',
+            'Git',
+            'MongoDB',
+        ],
+        'links': [
+            {'label': 'Email', 'href': 'mailto:adilurrehmanofficial@gmail.com', 'icon': 'bi-envelope-fill', 'variant': 'email'},
+            {'label': 'LinkedIn', 'href': 'https://linkedin.com/in/adilurrehmanofficial', 'icon': 'bi-linkedin', 'variant': 'linkedin'},
+            {'label': 'Instagram', 'href': 'https://instagram.com/adilurrehmanofficial', 'icon': 'bi-instagram', 'variant': 'instagram'},
+            {'label': 'GitHub', 'href': 'https://github.com/adilurrehman', 'icon': 'bi-github', 'variant': 'github'},
+        ],
+        'highlights': [
+            {
+                'title': 'Security-first thinking',
+                'text': 'Builds products that protect users and surface risks clearly, which matches the goal behind PhishGuard AI.'
+            },
+            {
+                'title': 'Full-stack execution',
+                'text': 'Comfortable moving from interface design to backend logic and practical delivery.'
+            },
+            {
+                'title': 'User-centered UI',
+                'text': 'Focuses on making the experience understandable, responsive, and easy to trust.'
+            },
+        ],
+    }
+
+    return jsonify({'content_html': render_template('_developer_content.html', developer=developer_profile)})
 
 @app.route('/dashboard')
 @login_required

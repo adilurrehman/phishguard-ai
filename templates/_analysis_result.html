@@ -1,0 +1,120 @@
+<div class="card p-4 shadow-lg analysis-result-card">
+
+    <h2 class="mb-3">
+        Threat Analysis Result
+    </h2>
+
+    <p>
+        <strong>URL:</strong>
+        {{ result.url }}
+    </p>
+
+    {% if result.prediction == "SAFE" %}
+
+        <h3 class="risk-low">
+            {{ result.prediction }}
+        </h3>
+
+    {% elif result.prediction == "SUSPICIOUS" %}
+
+        <h3 class="risk-medium">
+            {{ result.prediction }}
+        </h3>
+
+    {% else %}
+
+        <h3 class="risk-high">
+            {{ result.prediction }}
+        </h3>
+
+    {% endif %}
+
+    <p>
+        <strong>Risk Score:</strong>
+        {{ result.risk_score }}%
+    </p>
+
+    <hr>
+
+    <h5>
+        Threat Indicators
+    </h5>
+
+    <div class="d-flex flex-column gap-2">
+        {% for reason in result.reasons %}
+            <div class="p-2 rounded bg-dark bg-opacity-50 border border-secondary-subtle">
+                {{ reason }}
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-4 feedback-shell">
+
+        <div class="feedback-label text-secondary small mb-2">
+            Feedback
+        </div>
+
+        <form class="feedback-form" action="/feedback" method="POST" data-feedback-form>
+
+            <input
+            type="hidden"
+            name="url"
+            value="{{ result.url }}">
+
+            <input
+            type="hidden"
+            name="predicted_label"
+            value="{{ result.prediction }}">
+
+            <input
+            type="hidden"
+            name="risk_score"
+            value="{{ result.risk_score }}">
+
+            <button
+            type="submit"
+            class="feedback-icon-btn"
+            name="feedback"
+            value="correct"
+            aria-label="Thumbs up, prediction was helpful"
+            title="Helpful">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M2 21h4V9H2v12Zm20-10a2 2 0 0 0-2-2h-6.31l.95-4.57.03-.33a1.5 1.5 0 0 0-.44-1.06L13.17 2 6.59 8.59A2 2 0 0 0 6 10v9a2 2 0 0 0 2 2h7a2 2 0 0 0 1.94-1.53l2.13-8.53c.02-.08.03-.17.03-.26v-.18Z"/>
+                </svg>
+            </button>
+
+            <button
+            type="submit"
+            class="feedback-icon-btn"
+            name="feedback"
+            value="incorrect"
+            aria-label="Thumbs down, prediction was not helpful"
+            title="Not helpful">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M22 3h-4v12h4V3ZM2 13a2 2 0 0 0 2 2h6.31l-.95 4.57-.03.33c0 .41.17.8.44 1.06L10.83 22l6.58-6.59c.37-.37.59-.88.59-1.41V5a2 2 0 0 0-2-2H9a2 2 0 0 0-1.94 1.53L4.93 13.06c-.02.08-.03.17-.03.26v.18Z"/>
+                </svg>
+            </button>
+
+        </form>
+
+        <div class="feedback-toast" aria-live="polite" aria-atomic="true">
+            Thanks for your feedback
+        </div>
+
+    </div>
+
+    {% if result.safety_tips %}
+
+    <div class="alert alert-warning mt-4">
+
+        <h5>Safety Recommendations</h5>
+
+        <ul>
+            <li>{{ result.safety_tips | join('</li><li>') | safe }}</li>
+        </ul>
+
+    </div>
+
+    {% endif %}
+
+</div>

@@ -1,0 +1,21 @@
+<div class="developer-panel">
+    <div class="row g-4 align-items-center">
+        <div class="col-md-4 text-center">
+            <div class="developer-avatar-wrap mx-auto">
+                <div class="developer-avatar-ring"></div>
+                <img src="{{ developer.avatar_url }}" alt="{{ developer.name }}" class="developer-avatar-image" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=Adil+ur+Rehman+Kakar&background=0f172a&color=fff&size=512'">
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="developer-section-kicker">Creator profile</div>
+            <h2 class="developer-section-title">{{ developer.name }}</h2>
+            <p class="developer-story-text">{{ developer.role }} | {{ developer.education }}</p>
+            <p class="developer-story-text">{{ developer.bio }}</p>
+            <div class="developer-skill-cloud">
+                {% for skill in developer.skills %}
+                <span class="developer-skill-pill">{{ skill }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>

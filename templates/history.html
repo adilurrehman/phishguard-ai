@@ -7,6 +7,10 @@
 
     <title>Scan History</title>
 
+    <script>
+        document.documentElement.classList.add('page-loading');
+    </script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link
@@ -23,7 +27,36 @@
 
 {% include 'navbar.html' %}
 
-<div class="container mt-5">
+<div class="container mt-5 page-skeleton history-skeleton" aria-hidden="true">
+
+    <div class="skeleton-card mb-4" style="height: 2.8rem; width: 14rem;"></div>
+
+    <div class="row g-4 mb-4">
+
+        <div class="col-md-4"><div class="skeleton-card"></div></div>
+        <div class="col-md-4"><div class="skeleton-card"></div></div>
+        <div class="col-md-4"><div class="skeleton-card"></div></div>
+        <div class="col-md-4"><div class="skeleton-card"></div></div>
+
+    </div>
+
+    <div class="skeleton-card mb-4">
+        <div class="skeleton-line" style="width: 24%;"></div>
+        <div class="skeleton-line mt-3" style="width: 56%;"></div>
+    </div>
+
+    <div class="skeleton-card">
+        <div class="skeleton-line" style="width: 26%;"></div>
+        <div class="skeleton-table-row mt-4"></div>
+        <div class="skeleton-table-row"></div>
+        <div class="skeleton-table-row"></div>
+        <div class="skeleton-table-row"></div>
+        <div class="skeleton-table-row"></div>
+    </div>
+
+</div>
+
+<div class="container mt-5 page-content">
 
     <h1 class="mb-4">
         Scan History
@@ -200,6 +233,12 @@
     </div>
 
 </div>
+
+<script>
+window.addEventListener('load', () => {
+    document.documentElement.classList.remove('page-loading');
+});
+</script>
 
 </body>
 </html>

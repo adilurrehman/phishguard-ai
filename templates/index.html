@@ -7,6 +7,10 @@
 
     <title>PhishGuard AI</title>
 
+    <script>
+        document.documentElement.classList.add('page-loading');
+    </script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link
@@ -40,7 +44,7 @@
                     cybersecurity intelligence.
                 </p>
 
-                <form method="POST">
+                <form method="POST" id="analysis-form">
 
                     {% if error %}
 
@@ -67,7 +71,7 @@
 
                         <button
                         type="submit"
-                        class="btn btn-primary btn-lg">
+                        class="btn btn-primary btn-lg" id="analysis-submit-btn">
 
                             Analyze Threat
 
@@ -77,136 +81,73 @@
 
                 </form>
 
+                <div class="analysis-loading" id="analysis-loading" aria-live="polite" aria-busy="true">
+
+                    <div class="analysis-loading-surface">
+
+                        <div class="analysis-loading-header">
+
+                            <div>
+                                <div class="analysis-loading-kicker">
+                                    Threat analysis in progress
+                                </div>
+                                <div class="analysis-loading-title" id="analysis-loading-title">
+                                    Correlating URL signals
+                                </div>
+                            </div>
+
+                            <div class="analysis-loading-percent" id="analysis-loading-percent">
+                                0%
+                            </div>
+
+                        </div>
+
+                        <div class="analysis-scan-track">
+                            <div class="analysis-scan-fill" id="analysis-scan-fill"></div>
+                        </div>
+
+                        <div class="analysis-scan-stage-row" id="analysis-scan-stages">
+                            <span class="analysis-scan-stage" data-stage="0">Bootstrapping</span>
+                            <span class="analysis-scan-stage" data-stage="1">Parsing URL</span>
+                            <span class="analysis-scan-stage" data-stage="2">Checking domain</span>
+                            <span class="analysis-scan-stage" data-stage="3">Reputation review</span>
+                            <span class="analysis-scan-stage" data-stage="4">Signal correlation</span>
+                        </div>
+
+                        <div class="analysis-loading-skeleton">
+
+                            <div class="skeleton-line" style="width: 68%;"></div>
+                            <div class="skeleton-line" style="width: 44%;"></div>
+                            <div class="skeleton-chip mt-3"></div>
+                            <div class="skeleton-line mt-3" style="width: 88%;"></div>
+                            <div class="skeleton-line" style="width: 76%;"></div>
+                            <div class="skeleton-line" style="width: 60%;"></div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div id="analysis-error"></div>
+
             </div>
 
         </div>
 
     </div>
-
-    {% if result %}
 
     <div class="row justify-content-center mt-4">
 
         <div class="col-lg-8">
 
-            <div class="card p-4 shadow-lg">
+            <div class="analysis-result-panel {% if not result %}is-empty{% endif %}" id="analysis-result-panel">
 
-                <h2 class="mb-3">
-                    Threat Analysis Result
-                </h2>
-
-                <p>
-                    <strong>URL:</strong>
-                    {{ result.url }}
-                </p>
-
-                {% if result.prediction == "SAFE" %}
-
-                    <h3 class="risk-low">
-                        {{ result.prediction }}
-                    </h3>
-
-                {% elif result.prediction == "SUSPICIOUS" %}
-
-                    <h3 class="risk-medium">
-                        {{ result.prediction }}
-                    </h3>
-
-                {% else %}
-
-                    <h3 class="risk-high">
-                        {{ result.prediction }}
-                    </h3>
-
-                {% endif %}
-
-                <p>
-                    <strong>Risk Score:</strong>
-                    {{ result.risk_score }}%
-                </p>
-
-                <hr>
-
-                <h5>
-                    Threat Indicators
-                </h5>
-
-                <div class="d-flex flex-column gap-2">
-                    {% for reason in result.reasons %}
-                        <div class="p-2 rounded bg-dark bg-opacity-50 border border-secondary-subtle">
-                            {{ reason }}
-                        </div>
-                    {% endfor %}
+                <div class="analysis-result-content" id="analysis-result">
+                    {% if result %}
+                        {% include '_analysis_result.html' %}
+                    {% endif %}
                 </div>
-
-                <div class="mt-4 feedback-shell">
-
-                    <div class="feedback-label text-secondary small mb-2">
-                        Feedback
-                    </div>
-
-                    <form class="feedback-form" action="/feedback" method="POST" data-feedback-form>
-
-                        <input
-                        type="hidden"
-                        name="url"
-                        value="{{ result.url }}">
-
-                        <input
-                        type="hidden"
-                        name="predicted_label"
-                        value="{{ result.prediction }}">
-
-                        <input
-                        type="hidden"
-                        name="risk_score"
-                        value="{{ result.risk_score }}">
-
-                        <button
-                        type="submit"
-                        class="feedback-icon-btn"
-                        name="feedback"
-                        value="correct"
-                        aria-label="Thumbs up, prediction was helpful"
-                        title="Helpful">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M2 21h4V9H2v12Zm20-10a2 2 0 0 0-2-2h-6.31l.95-4.57.03-.33a1.5 1.5 0 0 0-.44-1.06L13.17 2 6.59 8.59A2 2 0 0 0 6 10v9a2 2 0 0 0 2 2h7a2 2 0 0 0 1.94-1.53l2.13-8.53c.02-.08.03-.17.03-.26v-.18Z"/>
-                            </svg>
-                        </button>
-
-                        <button
-                        type="submit"
-                        class="feedback-icon-btn"
-                        name="feedback"
-                        value="incorrect"
-                        aria-label="Thumbs down, prediction was not helpful"
-                        title="Not helpful">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M22 3h-4v12h4V3ZM2 13a2 2 0 0 0 2 2h6.31l-.95 4.57-.03.33c0 .41.17.8.44 1.06L10.83 22l6.58-6.59c.37-.37.59-.88.59-1.41V5a2 2 0 0 0-2-2H9a2 2 0 0 0-1.94 1.53L4.93 13.06c-.02.08-.03.17-.03.26v.18Z"/>
-                            </svg>
-                        </button>
-
-                    </form>
-
-                    <div class="feedback-toast" aria-live="polite" aria-atomic="true">
-                        Thanks for your feedback
-                    </div>
-
-                </div>
-
-                {% if result.safety_tips %}
-
-                <div class="alert alert-warning mt-4">
-
-                    <h5>Safety Recommendations</h5>
-
-                    <ul>
-                        <li>{{ result.safety_tips | join('</li><li>') | safe }}</li>
-                    </ul>
-
-                </div>
-
-                {% endif %}
 
             </div>
 
@@ -214,33 +155,273 @@
 
     </div>
 
-    {% endif %}
+    <div class="analysis-loading-skeleton analysis-skeleton-result" id="analysis-skeleton-result" aria-hidden="true">
+
+        <div class="card p-4 shadow-lg">
+
+            <div class="skeleton-line" style="width: 42%;"></div>
+            <div class="skeleton-line mt-3" style="width: 65%;"></div>
+            <div class="skeleton-line mt-3" style="width: 24%;"></div>
+            <div class="skeleton-line mt-3" style="width: 55%;"></div>
+
+            <div class="skeleton-stack">
+                <div class="skeleton-line" style="width: 91%;"></div>
+                <div class="skeleton-line" style="width: 84%;"></div>
+                <div class="skeleton-line" style="width: 78%;"></div>
+                <div class="skeleton-line" style="width: 87%;"></div>
+            </div>
+
+        </div>
+
+    </div>
 
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const feedbackForm = document.querySelector('[data-feedback-form]');
+    const analysisForm = document.getElementById('analysis-form');
+    const analysisLoading = document.getElementById('analysis-loading');
+    const analysisResult = document.getElementById('analysis-result');
+    const analysisResultPanel = document.getElementById('analysis-result-panel');
+    const analysisError = document.getElementById('analysis-error');
+    const analysisSkeleton = document.getElementById('analysis-skeleton-result');
+    const submitButton = document.getElementById('analysis-submit-btn');
 
-    if (!feedbackForm) {
-        return;
+    const loadingTitle = document.getElementById('analysis-loading-title');
+    const loadingPercent = document.getElementById('analysis-loading-percent');
+    const loadingFill = document.getElementById('analysis-scan-fill');
+    const loadingStages = Array.from(document.querySelectorAll('[data-stage]'));
+
+    const loadingStagesCopy = [
+        'Bootstrapping URL scan',
+        'Parsing structure',
+        'Checking domain signals',
+        'Reviewing reputation data',
+        'Correlating findings',
+        'Packaging the report'
+    ];
+
+    let progressValue = 0;
+    let slowProgressTimer = null;
+    let progressFrame = null;
+    let analysisStartTime = 0;
+
+    function setLoadingStage(nextValue) {
+        const stageIndex = nextValue < 15 ? 0 : nextValue < 30 ? 1 : nextValue < 50 ? 2 : nextValue < 72 ? 3 : nextValue < 90 ? 4 : 5;
+
+        if (loadingTitle) {
+            loadingTitle.textContent = loadingStagesCopy[stageIndex];
+        }
+
+        loadingStages.forEach((stage, index) => {
+            stage.classList.toggle('is-active', index === stageIndex);
+            stage.classList.toggle('is-done', index < stageIndex);
+        });
     }
 
-    const feedbackShell = feedbackForm.closest('.feedback-shell');
-    const feedbackToast = feedbackShell ? feedbackShell.querySelector('.feedback-toast') : null;
+    function renderProgress(nextValue) {
+        progressValue = Math.max(progressValue, Math.min(100, nextValue));
 
-    feedbackForm.addEventListener('submit', async (event) => {
+        if (loadingFill) {
+            loadingFill.style.width = `${progressValue}%`;
+        }
+
+        if (loadingPercent) {
+            loadingPercent.textContent = `${Math.round(progressValue)}%`;
+        }
+
+        setLoadingStage(progressValue);
+    }
+
+    function animateProgressTo(targetValue, durationMs) {
+        if (progressFrame) {
+            cancelAnimationFrame(progressFrame);
+        }
+
+        const startValue = progressValue;
+        const delta = targetValue - startValue;
+        const startTime = performance.now();
+
+        return new Promise((resolve) => {
+            const frame = (now) => {
+                const elapsed = now - startTime;
+                const progress = Math.min(1, elapsed / durationMs);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                renderProgress(startValue + delta * eased);
+
+                if (progress < 1) {
+                    progressFrame = requestAnimationFrame(frame);
+                } else {
+                    resolve();
+                }
+            };
+
+            progressFrame = requestAnimationFrame(frame);
+        });
+    }
+
+    function showAnalysisLoading() {
+        analysisStartTime = performance.now();
+        progressValue = 0;
+
+        if (analysisError) {
+            analysisError.innerHTML = '';
+        }
+
+        // Hide/remove previous result while a new analysis runs
+        if (analysisResult) {
+            analysisResult.innerHTML = '';
+        }
+
+        if (analysisResultPanel) {
+            analysisResultPanel.classList.add('is-loading');
+            analysisResultPanel.classList.add('is-empty');
+        }
+
+        if (analysisLoading) {
+            analysisLoading.classList.add('is-visible', 'fast');
+            analysisLoading.classList.remove('slow');
+        }
+
+        if (analysisSkeleton) {
+            analysisSkeleton.classList.add('is-visible');
+        }
+
+
+        renderProgress(12);
+
+        window.setTimeout(async () => {
+            await animateProgressTo(80, 900);
+            if (analysisLoading) {
+                analysisLoading.classList.remove('fast');
+                analysisLoading.classList.add('slow');
+            }
+        }, 80);
+
+        slowProgressTimer = window.setInterval(() => {
+            if (progressValue < 96) {
+                renderProgress(progressValue + 0.8);
+            }
+        }, 520);
+
+        if (submitButton) {
+            submitButton.disabled = true;
+        }
+    }
+
+    async function hideAnalysisLoading() {
+        if (slowProgressTimer) {
+            clearInterval(slowProgressTimer);
+            slowProgressTimer = null;
+        }
+
+        await animateProgressTo(100, 320);
+
+        const elapsed = performance.now() - analysisStartTime;
+        const holdTime = Math.max(0, 520 - elapsed);
+
+        window.setTimeout(() => {
+            if (analysisLoading) {
+                analysisLoading.classList.remove('is-visible', 'fast', 'slow');
+            }
+
+            if (analysisSkeleton) {
+                analysisSkeleton.classList.remove('is-visible');
+            }
+
+            if (analysisResultPanel) {
+                analysisResultPanel.classList.remove('is-loading');
+            }
+
+            if (submitButton) {
+                submitButton.disabled = false;
+            }
+        }, holdTime);
+    }
+
+    if (analysisForm) {
+        analysisForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            showAnalysisLoading();
+
+            const formData = new FormData(analysisForm);
+
+            try {
+                const response = await fetch(analysisForm.action || window.location.pathname, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: formData,
+                });
+
+                const payload = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(payload.error || 'Threat analysis failed');
+                }
+
+                if (analysisResult) {
+                    analysisResult.innerHTML = payload.result_html || '';
+                    if (analysisResultPanel) {
+                        analysisResultPanel.classList.remove('is-empty');
+                    }
+                }
+
+                await hideAnalysisLoading();
+            } catch (error) {
+                if (analysisError) {
+                    analysisError.innerHTML = `
+                        <div class="alert alert-danger mt-3 mb-0">
+                            ${error.message || 'Threat analysis could not be completed.'}
+                        </div>
+                    `;
+                }
+
+                if (analysisLoading) {
+                    analysisLoading.classList.remove('is-visible');
+                }
+
+                if (analysisSkeleton) {
+                    analysisSkeleton.classList.remove('is-visible');
+                }
+
+                if (analysisResultPanel) {
+                    analysisResultPanel.classList.remove('is-loading');
+                }
+
+                if (submitButton) {
+                    submitButton.disabled = false;
+                }
+            }
+        });
+    }
+
+    document.addEventListener('submit', async (event) => {
+        const feedbackForm = event.target.closest('[data-feedback-form]');
+
+        if (!feedbackForm) {
+            return;
+        }
+
         event.preventDefault();
 
         const submitter = event.submitter;
+
         if (!submitter || submitter.disabled) {
             return;
         }
 
+        const feedbackShell = feedbackForm.closest('.feedback-shell');
+        const feedbackToast = feedbackShell ? feedbackShell.querySelector('.feedback-toast') : null;
+        const buttons = feedbackForm.querySelectorAll('button');
         const formData = new FormData(feedbackForm);
+
         formData.set('feedback', submitter.value);
 
-        feedbackForm.querySelectorAll('button').forEach((button) => {
+        buttons.forEach((button) => {
             button.disabled = true;
         });
 
@@ -270,12 +451,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }, 1400);
         } catch (error) {
-            feedbackForm.querySelectorAll('button').forEach((button) => {
+            buttons.forEach((button) => {
                 button.disabled = false;
             });
 
             alert('Feedback could not be saved right now. Please try again.');
         }
+    });
+
+    window.addEventListener('load', () => {
+        document.documentElement.classList.remove('page-loading');
     });
 });
 </script>

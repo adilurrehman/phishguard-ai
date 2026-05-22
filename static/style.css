@@ -412,7 +412,7 @@ html.page-loading .page-skeleton {
 }
 
 .analysis-result-panel {
-    margin-top: 1rem;
+    margin-top: 0.5rem;
 }
 
 .analysis-result-panel.is-empty {
@@ -720,7 +720,7 @@ html.page-loading .page-skeleton {
 
 .analysis-result-skeleton {
     display: none;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
 }
 
 .analysis-result-shell.is-loading .analysis-result-skeleton {
@@ -753,13 +753,13 @@ html.page-loading .page-skeleton {
 .analysis-result-skeleton .skeleton-stack {
     display: grid;
     gap: 0.55rem;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
 }
 
 .analysis-result-skeleton .skeleton-controls {
     display: flex;
     gap: 0.5rem;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
 }
 
 @keyframes shimmerSweep {
@@ -1094,7 +1094,7 @@ svg {
 }
 
 .login-card-title {
-    margin-top: 1rem;
+    margin-top: 0.5rem;
     font-size: clamp(1.65rem, 2.6vw, 2.1rem);
     font-weight: 800;
     color: #f8fafc;
@@ -2577,7 +2577,7 @@ html.page-loading .login-background {
 }
 
 .login-card-title {
-    margin-top: 1rem;
+    margin-top: 0.5rem;
     font-size: clamp(1.65rem, 2.6vw, 2.1rem);
     font-weight: 800;
     color: #f8fafc;
@@ -2729,7 +2729,7 @@ html.page-loading .login-background {
 
 /* Footer Developer Badge */
 .footer-developer {
-    margin-top: 1rem;
+    margin-top: 0.5rem;
     
 }
 

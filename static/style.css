@@ -132,9 +132,7 @@ body {
 
 /* ensure dropdown menus render above other navbar surfaces */
 .dropdown-menu {
-    z-index: 2147483647 !important;
-    /* ensure the menu floats above any stacking context created by page content */
-    position: absolute !important;
+    z-index: 1055;
 }
 
 .navbar-collapse .nav-pills-left {
@@ -1411,6 +1409,8 @@ svg {
     background: rgba(7, 12, 24, 0.84);
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
+    position: relative;
+    z-index: 1060;
 }
 
 .home-shell {

@@ -311,7 +311,7 @@ html.page-loading .page-skeleton {
 
 .analysis-loading {
     display: none;
-    margin-top: 1.25rem;
+    
 }
 
 .analysis-loading.is-visible {
@@ -610,7 +610,7 @@ html.page-loading .page-skeleton {
 }
 
 .analysis-loader {
-    margin-top: 1.25rem;
+    
     padding: 1rem 1.1rem;
     border-radius: 1rem;
     border: 1px solid rgba(59, 130, 246, 0.22);
@@ -709,7 +709,7 @@ html.page-loading .page-skeleton {
 }
 
 .analysis-result-shell {
-    margin-top: 1.25rem;
+    
 }
 
 .analysis-result-shell.is-loading .analysis-result-content {
@@ -2729,7 +2729,8 @@ html.page-loading .login-background {
 
 /* Footer Developer Badge */
 .footer-developer {
-    margin-top: 1.25rem;
+    margin-top: 1rem;
+    
 }
 
 .developer-badge {

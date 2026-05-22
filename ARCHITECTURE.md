@@ -127,6 +127,23 @@ It is **not** an autonomous cybersecurity AI. It requires deliberate human revie
 
 ---
 
+### 6. QR Code Intake Boundary
+
+**File:** `run.py` (`/analyze-qr` route)
+
+**Purpose:** Decode a QR image into a URL and then run the exact same URL analysis pipeline used for direct link submissions.
+
+**Trust boundary:**
+- Only image uploads are accepted.
+- Uploaded files are capped at 4 MB and validated as real images before decoding.
+- QR metadata is ignored; only the decoded text payload is used.
+- The decoded payload is treated as untrusted text until it passes the same URL normalization and validation checks as direct links.
+- Oversized, malformed, or unreadable QR payloads are rejected before any analysis begins.
+
+**Security note:** QR handling is a convenience input path, not a privileged data source. A QR image should never be trusted more than a pasted URL.
+
+---
+
 ## What This System Actually Does
 
 ✅ **Can Do:**

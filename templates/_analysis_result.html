@@ -9,6 +9,20 @@
         {{ result.url }}
     </p>
 
+    {% if result.analysis_source %}
+    <p>
+        <strong>Source:</strong>
+        {{ result.analysis_source }}
+    </p>
+    {% endif %}
+
+    {% if result.extracted_url %}
+    <p>
+        <strong>Decoded URL:</strong>
+        {{ result.extracted_url }}
+    </p>
+    {% endif %}
+
     {% if result.prediction == "SAFE" %}
 
         <h3 class="risk-low">
@@ -55,6 +69,8 @@
         </div>
 
         <form class="feedback-form" action="/feedback" method="POST" data-feedback-form>
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
             <input
             type="hidden"

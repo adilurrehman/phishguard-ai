@@ -70,6 +70,7 @@
                         <td>
                             {% if row[7] == 'PENDING' %}
                             <form method="POST" class="d-flex flex-column gap-2">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                 <input type="hidden" name="feedback_id" value="{{ row[0] }}">
                                 <input type="text" name="review_notes" class="form-control form-control-sm" placeholder="Review notes">
                                 <div class="d-flex gap-2">

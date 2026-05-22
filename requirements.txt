@@ -2,3 +2,5 @@ pynput==1.8.1
 six==1.17.0
 python-whois
 validators==0.20.0
+opencv-python
+Pillow

@@ -1,4 +1,17 @@
+from io import BytesIO
+from pathlib import Path
+import ipaddress
+import os
+import re
+import secrets
+import time
+from urllib.parse import urlparse
+
 from flask import Flask, request, render_template, redirect, session, make_response, jsonify
+from PIL import Image, UnidentifiedImageError
+from PIL.Image import DecompressionBombError
+import cv2
+import numpy as np
 import validators
 from datetime import datetime, timedelta
 from app.analysis_engine import analyze_url
@@ -8,7 +21,118 @@ from app.security import login_required, admin_required
 
 app = Flask(__name__)
 
-app.secret_key = "SUPER_SECRET_KEY"
+# For production, set PHISHGUARD_SECRET_KEY to a strong random value.
+app.secret_key = os.environ.get('PHISHGUARD_SECRET_KEY', 'dev-insecure-change-me')
+
+app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024
+
+Image.MAX_IMAGE_PIXELS = 4_000_000
+
+ALLOWED_QR_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.webp', '.bmp'}
+ALLOWED_QR_MIME_TYPES = {'image/png', 'image/jpeg', 'image/webp', 'image/bmp'}
+ALLOWED_QR_PIL_FORMATS = {'PNG', 'JPEG', 'WEBP', 'BMP'}
+
+MAX_ANALYSIS_URL_LENGTH = 2048
+MAX_QR_DIMENSION = 2048
+MAX_QR_PAYLOAD_LENGTH = 4096
+
+HTTP_URL_REGEX = re.compile(r"https?://[^\s<>\"')]+", re.IGNORECASE)
+WWW_URL_REGEX = re.compile(r"\bwww\.[^\s<>\"')]+", re.IGNORECASE)
+
+
+class CsrfError(ValueError):
+    pass
+
+
+class RateLimitError(ValueError):
+    pass
+
+
+CSRF_SESSION_KEY = '_csrf_token'
+RATE_LIMIT_WINDOW_SECONDS = 5 * 60
+RATE_LIMIT_MAX_REQUESTS = 30
+_RATE_LIMIT_STATE = {}
+
+
+def _get_client_ip():
+
+    forwarded_for = request.headers.get('X-Forwarded-For', '')
+
+    if forwarded_for:
+        return forwarded_for.split(',')[0].strip()
+
+    return request.remote_addr or 'unknown'
+
+
+def _enforce_rate_limit(bucket):
+
+    key = f"{bucket}:{_get_client_ip()}"
+    now = time.time()
+    window_start = now - RATE_LIMIT_WINDOW_SECONDS
+
+    timestamps = _RATE_LIMIT_STATE.get(key, [])
+    timestamps = [t for t in timestamps if t >= window_start]
+
+    if len(timestamps) >= RATE_LIMIT_MAX_REQUESTS:
+        raise RateLimitError('Too many requests. Please wait and try again.')
+
+    timestamps.append(now)
+    _RATE_LIMIT_STATE[key] = timestamps
+
+
+def _get_csrf_token():
+
+    token = session.get(CSRF_SESSION_KEY)
+
+    if not token:
+        token = secrets.token_urlsafe(32)
+        session[CSRF_SESSION_KEY] = token
+
+    return token
+
+
+def _require_csrf_token():
+
+    token = (request.form.get('csrf_token', '') or '').strip()
+    expected = session.get(CSRF_SESSION_KEY, '')
+
+    if not token or not expected or not secrets.compare_digest(token, expected):
+        raise CsrfError('Invalid request token. Please refresh the page and try again.')
+
+
+@app.context_processor
+def inject_csrf_token():
+
+    return {'csrf_token': _get_csrf_token()}
+
+
+def _extract_http_urls(text):
+
+    if not text:
+        return []
+
+    urls = HTTP_URL_REGEX.findall(text)
+
+    if urls:
+        return urls
+
+    www_hits = WWW_URL_REGEX.findall(text)
+
+    return [f"https://{hit}" for hit in www_hits]
+
+
+def _extract_single_http_url(text):
+
+    urls = _extract_http_urls(text)
+
+    if not urls:
+        return None
+
+    if len(urls) > 1:
+        raise ValueError('Multiple URLs detected in QR code payload')
+
+    return urls[0]
+
 
 # SESSION SECURITY SETTINGS
 app.config['SESSION_PERMANENT'] = False
@@ -19,10 +143,218 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
+# Set to 1 when running behind HTTPS.
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('PHISHGUARD_SECURE_COOKIES', '0') == '1'
+
 
 def wants_json_response():
 
     return request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.accept_mimetypes.best == 'application/json'
+
+
+def _normalize_and_validate_url(raw_url):
+
+    cleaned_url = (raw_url or '').strip()
+
+    if not cleaned_url:
+        raise ValueError('URL cannot be empty')
+
+    if len(cleaned_url) > MAX_ANALYSIS_URL_LENGTH:
+        raise ValueError('URL is too long')
+
+    if any(ord(character) < 32 for character in cleaned_url):
+        raise ValueError('URL contains invalid characters')
+
+    if not validators.url(cleaned_url):
+        raise ValueError('Invalid URL format')
+
+    parsed_url = urlparse(cleaned_url)
+
+    if parsed_url.scheme not in {'http', 'https'}:
+        raise ValueError('Only http and https URLs are allowed')
+
+    if not parsed_url.netloc:
+        raise ValueError('Invalid URL format')
+
+    if parsed_url.username or parsed_url.password:
+        raise ValueError('URLs with embedded credentials are not allowed')
+
+    hostname = (parsed_url.hostname or '').strip().lower()
+
+    if not hostname:
+        raise ValueError('Invalid URL format')
+
+    if hostname in {'localhost'} or hostname.endswith('.local'):
+        raise ValueError('Local network URLs are not allowed')
+
+    try:
+        ip = ipaddress.ip_address(hostname)
+    except ValueError:
+        # hostname is not a literal IP address
+        pass
+    else:
+        if (
+            ip.is_private
+            or ip.is_loopback
+            or ip.is_link_local
+            or ip.is_reserved
+            or ip.is_multicast
+        ):
+            raise ValueError('Local network URLs are not allowed')
+
+    return cleaned_url
+
+
+def _decode_qr_image(uploaded_file):
+
+    if uploaded_file is None or not uploaded_file.filename:
+        raise ValueError('Please upload a QR image')
+
+    if not uploaded_file.mimetype:
+        raise ValueError('Unsupported QR image type')
+
+    file_suffix = Path(uploaded_file.filename).suffix.lower()
+
+    if file_suffix not in ALLOWED_QR_EXTENSIONS:
+        raise ValueError('Unsupported QR image format')
+
+    if uploaded_file.mimetype not in ALLOWED_QR_MIME_TYPES:
+        raise ValueError('Unsupported QR image type')
+
+    file_bytes = uploaded_file.read()
+
+    if not file_bytes:
+        raise ValueError('Uploaded QR image is empty')
+
+    if len(file_bytes) > app.config['MAX_CONTENT_LENGTH']:
+        raise ValueError('Uploaded QR image is too large')
+
+    try:
+        with Image.open(BytesIO(file_bytes)) as probe:
+            probe.verify()
+
+        with Image.open(BytesIO(file_bytes)) as image:
+            if image.format and image.format.upper() not in ALLOWED_QR_PIL_FORMATS:
+                raise ValueError('Unsupported QR image type')
+
+            if getattr(image, 'is_animated', False) or getattr(image, 'n_frames', 1) != 1:
+                raise ValueError('Animated images are not allowed')
+
+            image = image.convert('RGB')
+
+            if image.width > MAX_QR_DIMENSION or image.height > MAX_QR_DIMENSION:
+                raise ValueError('Uploaded QR image dimensions are too large')
+
+            rgb = np.array(image)
+
+    except DecompressionBombError as exc:
+        raise ValueError('The uploaded image is too complex to process safely') from exc
+    except UnidentifiedImageError as exc:
+        raise ValueError('The uploaded file is not a valid image') from exc
+    except OSError as exc:
+        raise ValueError('The uploaded image could not be processed') from exc
+
+    def _decode_payload(payload):
+        payload = (payload or '').strip()
+
+        if not payload:
+            return None
+
+        if len(payload) > MAX_QR_PAYLOAD_LENGTH:
+            raise ValueError('QR code payload is too large')
+
+        url = _extract_single_http_url(payload)
+
+        if not url:
+            raise ValueError('QR code does not contain an http(s) URL')
+
+        return url
+
+    try:
+        detector = cv2.QRCodeDetector()
+
+        bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+        gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
+        _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        inverted = cv2.bitwise_not(thresh)
+
+        for frame in (bgr, gray, thresh, inverted):
+            qr_data, _, _ = detector.detectAndDecode(frame)
+            if qr_data:
+                return _decode_payload(qr_data)
+
+        try:
+            ok, decoded_info, _, _ = detector.detectAndDecodeMulti(bgr)
+            if ok and decoded_info:
+                for info in decoded_info:
+                    if info:
+                        return _decode_payload(info)
+        except Exception:
+            pass
+
+        raise ValueError('No QR code could be decoded from the uploaded image')
+
+    except ValueError:
+        raise
+    except Exception as exc:
+        raise ValueError('QR code detection failed. Please ensure the image contains a valid QR code.') from exc
+
+
+def _store_analysis_result(url, audit_action):
+
+    analysis = analyze_url(url)
+
+    user_id = session['user_id']
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        INSERT INTO scanned_urls
+        (user_id, url, prediction, risk_score)
+        VALUES (%s, %s, %s, %s)
+        """,
+        (
+            user_id,
+            url,
+            analysis['prediction'],
+            analysis['risk_score'],
+        )
+    )
+
+    cur.execute(
+        """
+        INSERT INTO audit_logs (action)
+        VALUES (%s)
+        """,
+        (audit_action,)
+    )
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+    return {
+        'url': url,
+        'prediction': analysis['prediction'],
+        'risk_score': analysis['risk_score'],
+        'reasons': analysis['reasons'],
+        'safety_tips': analysis['safety_tips'],
+    }
+
+
+def _render_analysis_page(template_name, result=None, error=None, status_code=200):
+
+    if wants_json_response():
+
+        if error:
+            return jsonify({'error': error}), status_code
+
+        return jsonify({'result_html': render_template('_analysis_result.html', result=result)})
+
+    return render_template(template_name, result=result, error=error), status_code
 
 
 @app.before_request
@@ -58,19 +390,56 @@ def apply_security_headers(response):
 
     response.headers['X-Frame-Options'] = 'DENY'
 
+    response.headers['Referrer-Policy'] = 'no-referrer'
+
+    response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self' https://cdn.jsdelivr.net; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+        "img-src 'self' data:; "
+        "base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+    )
+
     response.headers['Cache-Control'] = 'no-store'
 
     return response
+
+
+@app.errorhandler(413)
+def request_entity_too_large(error):
+
+    message = 'The uploaded file is too large. Please use a file under 4 MB.'
+
+    if wants_json_response():
+        return jsonify({'error': message}), 413
+
+    if request.path.startswith('/analyze-qr'):
+        template_name = 'analyze_qr.html'
+    elif request.path.startswith('/analyze-link'):
+        template_name = 'analyze_link.html'
+    else:
+        template_name = 'index.html'
+
+    return render_template(template_name, error=message), 413
 
 
 @app.route('/feedback', methods=['POST'])
 @login_required
 def feedback():
 
-    url = request.form['url']
-    predicted_label = request.form['predicted_label']
-    risk_score = request.form['risk_score']
-    feedback_value = request.form['feedback']
+    try:
+        _require_csrf_token()
+    except CsrfError as exc:
+        if wants_json_response():
+            return jsonify({'error': str(exc)}), 403
+        return make_response(str(exc), 403)
+
+    url = _normalize_and_validate_url(request.form.get('url', ''))
+    predicted_label = request.form.get('predicted_label', '').strip()
+    risk_score = request.form.get('risk_score', '').strip()
+    feedback_value = request.form.get('feedback', '').strip()
 
     # DETERMINE TRUE LABEL
     if feedback_value == 'correct':
@@ -142,6 +511,13 @@ def admin_feedback():
 
     if request.method == 'POST':
 
+        try:
+            _require_csrf_token()
+        except CsrfError as exc:
+            cur.close()
+            conn.close()
+            return make_response(str(exc), 403)
+
         feedback_id = request.form.get('feedback_id', '').strip()
         action = request.form.get('action', '').strip().upper()
         review_notes = request.form.get('review_notes', '').strip()
@@ -205,84 +581,91 @@ def admin_feedback():
         pending_count=pending_count,
     )
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
+@app.route('/menu', methods=['GET'])
+@login_required
 def home():
 
-    if 'user_id' not in session:
-        return redirect('/login')
+    return render_template('index.html')
+
+
+@app.route('/analyze-link', methods=['GET', 'POST'])
+@login_required
+def analyze_link():
 
     result = None
+    error = None
+    status_code = 200
 
     if request.method == 'POST':
 
-        url = request.form.get('url', '')
-        url = url.strip()
+        try:
+            _require_csrf_token()
+            _enforce_rate_limit('analyze-link')
 
-        # EMPTY CHECK
-        if not url:
-            if wants_json_response():
-                return jsonify({'error': 'URL cannot be empty'}), 400
+            url = _normalize_and_validate_url(request.form.get('url', ''))
+            result = _store_analysis_result(url, f'URL scanned from link workflow: {url}')
+            result['analysis_source'] = 'Direct link'
+        except RateLimitError as exc:
+            error = str(exc)
+            status_code = 429
+        except CsrfError as exc:
+            error = str(exc)
+            status_code = 403
+        except ValueError as exc:
+            error = str(exc)
+            status_code = 400
 
-            return render_template('index.html', error="URL cannot be empty")
+        if error:
+            return _render_analysis_page('analyze_link.html', result=None, error=error, status_code=status_code)
 
-        # URL FORMAT VALIDATION
-        if not validators.url(url):
-            if wants_json_response():
-                return jsonify({'error': 'Invalid URL format'}), 400
+        if wants_json_response():
+            return jsonify({'result_html': render_template('_analysis_result.html', result=result)})
 
-            return render_template('index.html', error="Invalid URL format")
+    return render_template('analyze_link.html', result=result, error=error)
 
-        analysis = analyze_url(url)
-        prediction = analysis['prediction']
-        risk_score = analysis['risk_score']
-        reasons = analysis['reasons']
-        safety_tips = analysis['safety_tips']
 
-        # DATABASE SAVE
-        user_id = session['user_id']
+@app.route('/analyze-qr', methods=['GET', 'POST'])
+@login_required
+def analyze_qr():
 
-        conn = get_db_connection()
-        cur = conn.cursor()
+    result = None
+    error = None
+    status_code = 200
 
-        cur.execute(
-            """
-            INSERT INTO scanned_urls
-            (user_id, url, prediction, risk_score)
-            VALUES (%s, %s, %s, %s)
-            """,
-            (
-                user_id,
-                url,
-                prediction,
-                risk_score
-            )
-        )
+    if request.method == 'POST':
 
-        cur.execute(
-            """
-            INSERT INTO audit_logs (action)
-            VALUES (%s)
-            """,
-            (f"URL scanned: {url}",)
-        )
+        try:
+            _require_csrf_token()
+            _enforce_rate_limit('analyze-qr')
 
-        conn.commit()
+            uploaded_files = request.files.getlist('qr_image')
 
-        cur.close()
-        conn.close()
+            if len(uploaded_files) != 1:
+                raise ValueError('Please upload exactly one QR image')
 
-        result = {
-            'url': url,
-            'prediction': prediction,
-            'risk_score': risk_score,
-            'reasons': reasons,
-            'safety_tips': safety_tips,
-        }
+            decoded_url = _decode_qr_image(uploaded_files[0])
+            url = _normalize_and_validate_url(decoded_url)
+            result = _store_analysis_result(url, f'QR code analyzed: {url}')
+            result['analysis_source'] = 'QR code'
+            result['extracted_url'] = url
+        except RateLimitError as exc:
+            error = str(exc)
+            status_code = 429
+        except CsrfError as exc:
+            error = str(exc)
+            status_code = 403
+        except ValueError as exc:
+            error = str(exc)
+            status_code = 400
 
-    if wants_json_response() and request.method == 'POST':
-        return jsonify({'result_html': render_template('_analysis_result.html', result=result)})
+        if error:
+            return _render_analysis_page('analyze_qr.html', result=None, error=error, status_code=status_code)
 
-    return render_template('index.html', result=result)
+        if wants_json_response():
+            return jsonify({'result_html': render_template('_analysis_result.html', result=result)})
+
+    return render_template('analyze_qr.html', result=result, error=error)
 
 @app.route('/history')
 @login_required
@@ -666,6 +1049,12 @@ def signup():
 
     if request.method == 'POST':
 
+        try:
+            _require_csrf_token()
+            _enforce_rate_limit('signup')
+        except (CsrfError, RateLimitError) as exc:
+            return make_response(str(exc), 403 if isinstance(exc, CsrfError) else 429)
+
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
@@ -697,6 +1086,12 @@ def signup():
 def login():
 
     if request.method == 'POST':
+
+        try:
+            _require_csrf_token()
+            _enforce_rate_limit('login')
+        except (CsrfError, RateLimitError) as exc:
+            return make_response(str(exc), 403 if isinstance(exc, CsrfError) else 429)
 
         email = request.form['email']
         password = request.form['password']

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Analyze QR Code</title>
+    <script>document.documentElement.classList.add('page-loading');</script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+{% include 'navbar.html' %}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card p-4 shadow-lg analyzer-card">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                    <div>
+                        <div class="analysis-page-kicker">QR workflow</div>
+                        <h1 class="mb-1">Analyze QR Code</h1>
+                        <p class="text-secondary mb-0">Upload a QR image, decode the embedded URL, and analyze it safely.</p>
+                    </div>
+                    <a href="/" class="btn btn-outline-light btn-sm">Back to Home</a>
+                </div>
+
+                <form method="POST" id="analysis-form" action="/analyze-qr" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    {% if error %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="qr_image" class="form-label text-secondary">QR image</label>
+                        <input type="file" name="qr_image" id="qr_image" class="form-control form-control-lg" accept=".png,.jpg,.jpeg,.webp,.bmp,image/*" required>
+                        <div class="form-text text-secondary">
+                            Only the embedded URL is decoded. QR metadata and unsupported payloads are ignored.
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" id="analysis-submit-btn">Analyze QR Code</button>
+                    </div>
+                </form>
+
+                <div class="analysis-loading" id="analysis-loading" aria-live="polite" aria-busy="true">
+                    <div class="analysis-loading-surface">
+                        <div class="analysis-loading-header">
+                            <div>
+                                <div class="analysis-loading-kicker">Threat analysis in progress</div>
+                                <div class="analysis-loading-title" id="analysis-loading-title">Decoding QR payload</div>
+                            </div>
+                            <div class="analysis-loading-percent" id="analysis-loading-percent">0%</div>
+                        </div>
+
+                        <div class="analysis-scan-track"><div class="analysis-scan-fill" id="analysis-scan-fill"></div></div>
+
+                        <div class="analysis-scan-stage-row" id="analysis-scan-stages">
+                            <span class="analysis-scan-stage" data-stage="0">Validate upload</span>
+                            <span class="analysis-scan-stage" data-stage="1">Decode image</span>
+                            <span class="analysis-scan-stage" data-stage="2">Inspect payload</span>
+                            <span class="analysis-scan-stage" data-stage="3">Validate URL</span>
+                            <span class="analysis-scan-stage" data-stage="4">Run analysis</span>
+                        </div>
+
+                        <div class="analysis-loading-skeleton">
+                            <div class="skeleton-line" style="width: 68%;"></div>
+                            <div class="skeleton-line" style="width: 44%;"></div>
+                            <div class="skeleton-chip mt-3"></div>
+                            <div class="skeleton-line mt-3" style="width: 88%;"></div>
+                            <div class="skeleton-line" style="width: 76%;"></div>
+                            <div class="skeleton-line" style="width: 60%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="analysis-error"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center mt-4">
+        <div class="col-lg-8">
+            <div class="analysis-result-panel {% if not result %}is-empty{% endif %}" id="analysis-result-panel">
+                <div class="analysis-result-content" id="analysis-result">
+                    {% if result %}
+                        {% include '_analysis_result.html' %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="analysis-loading-skeleton analysis-skeleton-result" id="analysis-skeleton-result" aria-hidden="true">
+        <div class="card p-4 shadow-lg">
+            <div class="skeleton-line" style="width: 42%;"></div>
+            <div class="skeleton-line mt-3" style="width: 65%;"></div>
+            <div class="skeleton-line mt-3" style="width: 24%;"></div>
+            <div class="skeleton-line mt-3" style="width: 55%;"></div>
+            <div class="skeleton-stack">
+                <div class="skeleton-line" style="width: 91%;"></div>
+                <div class="skeleton-line" style="width: 84%;"></div>
+                <div class="skeleton-line" style="width: 78%;"></div>
+                <div class="skeleton-line" style="width: 87%;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const analysisForm = document.getElementById('analysis-form');
+    const analysisLoading = document.getElementById('analysis-loading');
+    const analysisResult = document.getElementById('analysis-result');
+    const analysisResultPanel = document.getElementById('analysis-result-panel');
+    const analysisError = document.getElementById('analysis-error');
+    const analysisSkeleton = document.getElementById('analysis-skeleton-result');
+    const submitButton = document.getElementById('analysis-submit-btn');
+
+    const loadingTitle = document.getElementById('analysis-loading-title');
+    const loadingPercent = document.getElementById('analysis-loading-percent');
+    const loadingFill = document.getElementById('analysis-scan-fill');
+    const loadingStages = Array.from(document.querySelectorAll('[data-stage]'));
+
+    const loadingStagesCopy = [
+        'Validating QR image',
+        'Decoding payload',
+        'Inspecting extracted text',
+        'Validating URL safety',
+        'Packaging the report',
+        'Finalizing analysis'
+    ];
+
+    let progressValue = 0;
+    let slowProgressTimer = null;
+    let progressFrame = null;
+    let analysisStartTime = 0;
+
+    function setLoadingStage(nextValue) {
+        const stageIndex = nextValue < 15 ? 0 : nextValue < 30 ? 1 : nextValue < 50 ? 2 : nextValue < 72 ? 3 : nextValue < 90 ? 4 : 5;
+
+        if (loadingTitle) {
+            loadingTitle.textContent = loadingStagesCopy[stageIndex];
+        }
+
+        loadingStages.forEach((stage, index) => {
+            stage.classList.toggle('is-active', index === stageIndex);
+            stage.classList.toggle('is-done', index < stageIndex);
+        });
+    }
+
+    function renderProgress(nextValue) {
+        progressValue = Math.max(progressValue, Math.min(100, nextValue));
+
+        if (loadingFill) {
+            loadingFill.style.width = `${progressValue}%`;
+        }
+
+        if (loadingPercent) {
+            loadingPercent.textContent = `${Math.round(progressValue)}%`;
+        }
+
+        setLoadingStage(progressValue);
+    }
+
+    function animateProgressTo(targetValue, durationMs) {
+        if (progressFrame) {
+            cancelAnimationFrame(progressFrame);
+        }
+
+        const startValue = progressValue;
+        const delta = targetValue - startValue;
+        const startTime = performance.now();
+
+        return new Promise((resolve) => {
+            const frame = (now) => {
+                const elapsed = now - startTime;
+                const progress = Math.min(1, elapsed / durationMs);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                renderProgress(startValue + delta * eased);
+
+                if (progress < 1) {
+                    progressFrame = requestAnimationFrame(frame);
+                } else {
+                    resolve();
+                }
+            };
+
+            progressFrame = requestAnimationFrame(frame);
+        });
+    }
+
+    function showAnalysisLoading() {
+        analysisStartTime = performance.now();
+        progressValue = 0;
+
+        if (analysisError) {
+            analysisError.innerHTML = '';
+        }
+
+        if (analysisResult) {
+            analysisResult.innerHTML = '';
+        }
+
+        if (analysisResultPanel) {
+            analysisResultPanel.classList.add('is-loading');
+            analysisResultPanel.classList.add('is-empty');
+        }
+
+        if (analysisLoading) {
+            analysisLoading.classList.add('is-visible', 'fast');
+            analysisLoading.classList.remove('slow');
+        }
+
+        if (analysisSkeleton) {
+            analysisSkeleton.classList.add('is-visible');
+        }
+
+        renderProgress(12);
+
+        window.setTimeout(async () => {
+            await animateProgressTo(80, 900);
+            if (analysisLoading) {
+                analysisLoading.classList.remove('fast');
+                analysisLoading.classList.add('slow');
+            }
+        }, 80);
+
+        slowProgressTimer = window.setInterval(() => {
+            if (progressValue < 96) {
+                renderProgress(progressValue + 0.8);
+            }
+        }, 520);
+
+        if (submitButton) {
+            submitButton.disabled = true;
+        }
+    }
+
+    async function hideAnalysisLoading() {
+        if (slowProgressTimer) {
+            clearInterval(slowProgressTimer);
+            slowProgressTimer = null;
+        }
+
+        await animateProgressTo(100, 320);
+
+        const elapsed = performance.now() - analysisStartTime;
+        const holdTime = Math.max(0, 520 - elapsed);
+
+        window.setTimeout(() => {
+            if (analysisLoading) {
+                analysisLoading.classList.remove('is-visible', 'fast', 'slow');
+            }
+
+            if (analysisSkeleton) {
+                analysisSkeleton.classList.remove('is-visible');
+            }
+
+            if (analysisResultPanel) {
+                analysisResultPanel.classList.remove('is-loading');
+            }
+
+            if (submitButton) {
+                submitButton.disabled = false;
+            }
+        }, holdTime);
+    }
+
+    if (analysisForm) {
+        analysisForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            showAnalysisLoading();
+
+            const formData = new FormData(analysisForm);
+
+            try {
+                const response = await fetch(analysisForm.action || window.location.pathname, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: formData,
+                });
+
+                const payload = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(payload.error || 'Threat analysis failed');
+                }
+
+                if (analysisResult) {
+                    analysisResult.innerHTML = payload.result_html || '';
+                    if (analysisResultPanel) {
+                        analysisResultPanel.classList.remove('is-empty');
+                    }
+                }
+
+                await hideAnalysisLoading();
+            } catch (error) {
+                if (analysisError) {
+                    analysisError.innerHTML = `
+                        <div class="alert alert-danger mt-3 mb-0">
+                            ${error.message || 'Threat analysis could not be completed.'}
+                        </div>
+                    `;
+                }
+
+                if (analysisLoading) {
+                    analysisLoading.classList.remove('is-visible');
+                }
+
+                if (analysisSkeleton) {
+                    analysisSkeleton.classList.remove('is-visible');
+                }
+
+                if (analysisResultPanel) {
+                    analysisResultPanel.classList.remove('is-loading');
+                }
+
+                if (submitButton) {
+                    submitButton.disabled = false;
+                }
+            }
+        });
+    }
+
+    window.addEventListener('load', () => {
+        document.documentElement.classList.remove('page-loading');
+    });
+});
+</script>
+
+</body>
+</html>

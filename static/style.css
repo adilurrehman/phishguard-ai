@@ -135,6 +135,14 @@ body {
     z-index: 1055;
 }
 
+/* On large viewports the main content can create new stacking contexts; ensure navbar dropdowns float above everything */
+.navbar .dropdown-menu,
+.nav-pills-left .dropdown-menu,
+.dropdown-menu.show {
+    z-index: 99999 !important;
+}
+}
+
 .navbar-collapse .nav-pills-left {
     width: auto;
 }

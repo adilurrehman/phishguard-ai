@@ -2726,3 +2726,29 @@ html.page-loading .login-background {
 .tracking-wide {
     letter-spacing: 0.05em;
 }
+
+/* Footer Developer Badge */
+.footer-developer {
+    margin-top: 1.25rem;
+}
+
+.developer-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 1rem;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    color: #64748b;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.developer-name {
+    color: #cbd5e1;
+    font-weight: 700;
+    margin-left: 0.35rem;
+    letter-spacing: 0.02em;
+}

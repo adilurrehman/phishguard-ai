@@ -4,134 +4,137 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PhishGuard AI | Home</title>
+    
+    <script>
+        document.documentElement.classList.add('page-loading');
+    </script>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="home-page d-flex flex-column min-vh-100">
 
 {% include 'navbar.html' %}
 
-<main class="home-shell container py-4 py-lg-5">
+<!-- Skeleton Loading Content -->
+<main class="home-shell container py-4 py-lg-5 page-skeleton" aria-hidden="true">
+    <div class="skeleton-card" style="min-height: 600px; border-radius: 2rem;">
+        <div class="p-4 p-lg-5">
+            <div class="skeleton-line mb-3" style="width:120px;"></div>
+            <div class="skeleton-line mb-4" style="width:60%; height:2rem;"></div>
+            
+            <div class="row g-4 mt-4">
+                <div class="col-lg-6">
+                    <div class="skeleton-card" style="height:140px; border-radius:1.25rem; border:1px solid rgba(148,163,184,0.1); background:rgba(15,23,42,0.4);"></div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="skeleton-card" style="height:140px; border-radius:1.25rem; border:1px solid rgba(148,163,184,0.1); background:rgba(15,23,42,0.4);"></div>
+                </div>
+            </div>
+            
+            <div class="skeleton-line mb-3 mt-5" style="width:120px;"></div>
+            <div class="skeleton-line mb-4" style="width:30%; height:1.5rem;"></div>
+            
+            <div class="row g-4 mt-2">
+                <div class="col-md-4">
+                    <div class="skeleton-card" style="height:160px; border-radius:1.25rem; border:1px solid rgba(148,163,184,0.1); background:rgba(15,23,42,0.4);"></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="skeleton-card" style="height:160px; border-radius:1.25rem; border:1px solid rgba(148,163,184,0.1); background:rgba(15,23,42,0.4);"></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="skeleton-card" style="height:160px; border-radius:1.25rem; border:1px solid rgba(148,163,184,0.1); background:rgba(15,23,42,0.4);"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<main class="home-shell container py-4 py-lg-5 page-content">
     <section class="home-hero card p-4 p-lg-5 mb-0">
         <div class="home-hero-orb home-hero-orb-one" aria-hidden="true"></div>
         <div class="home-hero-orb home-hero-orb-two" aria-hidden="true"></div>
 
-        <div class="row align-items-lg-start g-4 g-lg-5 home-hero-content">
-            <div class="col-lg-7">
-                <div class="home-kicker">AI phishing defense platform</div>
-                <h1 class="home-title">Analyze links and QR codes before they can be used against you.</h1>
-                <p class="home-lead">
-                    PhishGuard AI helps you inspect suspicious URLs, decode QR payloads safely, and understand
-                    why a link looks risky with explainable results.
-                </p>
-
-                <div class="home-metric-grid mt-4">
-                    <div class="home-metric-card">
-                        <div class="home-metric-value">Explainable</div>
-                        <div class="home-metric-label">risk reasons and safety tips</div>
+        <div class="position-relative z-1 w-100">
+            <!-- Quick access -->
+            <div class="home-section list-group-flush mb-5 pb-2">
+                <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+                    <div>
+                        <div class="home-section-kicker">Quick access</div>
+                        <h2 class="home-section-title mb-0" style="font-size: clamp(1.5rem, 4vw, 2.25rem);">Start the workflow that fits your input.</h2>
                     </div>
-                    <div class="home-metric-card">
-                        <div class="home-metric-value">Secure</div>
-                        <div class="home-metric-label">CSRF, rate limits, URL checks</div>
-                    </div>
-                    <div class="home-metric-card">
-                        <div class="home-metric-value">Fast</div>
-                        <div class="home-metric-label">clear workflow, minimal friction</div>
-                    </div>
-                </div>
-
-                <div class="mt-5">
-                    <div class="home-section-kicker">Quick access</div>
-                    <h2 class="home-section-title h4 mb-2">Start the workflow that fits your input.</h2>
-                    <p class="home-section-note mb-4 text-secondary">
+                    <p class="home-section-note mb-0" style="max-width: 32rem; color: #94a3b8;">
                         Use the same security controls whether you paste a link or upload a QR image.
                     </p>
-
-                    <div class="row g-3">
-                        <div class="col-sm-6">
-                            <a class="home-action-card home-action-link h-100 border border-secondary-subtle bg-dark-subtle p-3 rounded-4 text-decoration-none" href="/analyze-link">
-                                <div class="home-action-icon mb-2 text-primary fs-3">
-                                    <i class="bi bi-link-45deg"></i>
-                                </div>
-                                <div class="home-action-body">
-                                    <div class="home-action-title fw-bold text-white mb-1">Analyze Link</div>
-                                    <div class="home-action-text text-secondary small">Submit a URL for phishing analysis, scoring, and explainable recommendations.</div>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="col-sm-6">
-                            <a class="home-action-card home-action-qr h-100 border border-secondary-subtle bg-dark-subtle p-3 rounded-4 text-decoration-none" href="/analyze-qr">
-                                <div class="home-action-icon mb-2 text-info fs-4">
-                                    <i class="bi bi-qr-code-scan"></i>
-                                </div>
-                                <div class="home-action-body">
-                                    <div class="home-action-title fw-bold text-white mb-1">Analyze QR Code</div>
-                                    <div class="home-action-text text-secondary small">Upload a QR image to extract the hidden URL and validate it through the same guardrails.</div>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
                 </div>
 
-                <div class="mt-5 border-top border-secondary-subtle pt-4">
-                    <div class="home-section-kicker">Security first</div>
-                    <h2 class="home-section-title h5 mb-3">A safer workflow by design.</h2>
-                    <div class="row g-3">
-                        <div class="col-sm-4">
-                            <div class="home-feature-card h-100 p-3 border border-secondary-subtle bg-dark-subtle rounded-3">
-                                <div class="home-feature-label text-uppercase small text-muted fw-bold mb-2">Protection</div>
-                                <h3 class="home-feature-title mb-1 text-white" style="font-size: 1rem;">Input controls</h3>
-                                <p class="home-feature-text mb-0 text-secondary" style="font-size: 0.85rem;">Login-bound workflows, CSRF protection, and rate limiting reduce abuse.</p>
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <a class="home-action-card home-action-link h-100" href="/analyze-link">
+                            <div class="home-action-icon">
+                                <i class="bi bi-link-45deg"></i>
                             </div>
-                        </div>
-                        <div class="col-sm-4">
-                            <div class="home-feature-card h-100 p-3 border border-secondary-subtle bg-dark-subtle rounded-3">
-                                <div class="home-feature-label text-uppercase small text-muted fw-bold mb-2">Clarity</div>
-                                <h3 class="home-feature-title mb-1 text-white" style="font-size: 1rem;">Explainable output</h3>
-                                <p class="home-feature-text mb-0 text-secondary" style="font-size: 0.85rem;">Each result includes a score, reasons, and safety tips the user can act on.</p>
+                            <div class="home-action-body">
+                                <div class="home-action-title">Analyze Link</div>
+                                <div class="home-action-text">Submit a URL for phishing analysis, scoring, and explainable recommendations.</div>
                             </div>
-                        </div>
-                        <div class="col-sm-4">
-                            <div class="home-feature-card h-100 p-3 border border-secondary-subtle bg-dark-subtle rounded-3">
-                                <div class="home-feature-label text-uppercase small text-muted fw-bold mb-2">Auditability</div>
-                                <h3 class="home-feature-title mb-1 text-white" style="font-size: 1rem;">Saved history</h3>
-                                <p class="home-feature-text mb-0 text-secondary" style="font-size: 0.85rem;">Review past scans and track suspicious patterns over time from one dashboard.</p>
+                            <div class="home-action-arrow">
+                                <i class="bi bi-arrow-right"></i>
                             </div>
-                        </div>
+                        </a>
+                    </div>
+        
+                    <div class="col-lg-6">
+                        <a class="home-action-card home-action-qr h-100" href="/analyze-qr">
+                            <div class="home-action-icon">
+                                <i class="bi bi-qr-code-scan"></i>
+                            </div>
+                            <div class="home-action-body">
+                                <div class="home-action-title">Analyze QR Code</div>
+                                <div class="home-action-text">Upload a QR image to extract the hidden URL and validate it through the same guardrails.</div>
+                            </div>
+                            <div class="home-action-arrow">
+                                <i class="bi bi-arrow-right"></i>
+                            </div>
+                        </a>
                     </div>
                 </div>
             </div>
+            
+            <hr style="border-color: rgba(148, 163, 184, 0.15);" class="my-5">
 
-            <div class="col-lg-5 position-sticky" style="top: 2rem;">
-                <div class="home-insight-panel">
-                    <div class="home-insight-kicker">What the platform checks</div>
-                    <h2 class="home-insight-title">Built to surface threat signals quickly.</h2>
-
-                    <div class="home-insight-list">
-                        <div class="home-insight-item">
-                            <div class="home-insight-icon"><i class="bi bi-shield-check"></i></div>
-                            <div>
-                                <div class="home-insight-item-title">URL safety checks</div>
-                                <div class="home-insight-item-text">Rejects suspicious formats, local targets, and invalid URLs.</div>
-                            </div>
+            <!-- Security first -->
+            <div class="home-section mt-5 pt-2">
+                <div class="mb-4">
+                    <div class="home-section-kicker">Security first</div>
+                    <h2 class="home-section-title mb-0" style="font-size: clamp(1.25rem, 3vw, 1.75rem);">A safer workflow by design.</h2>
+                </div>
+        
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="home-feature-card h-100" style="background: rgba(15, 23, 42, 0.3); border-color: rgba(148, 163, 184, 0.08);">
+                            <div class="home-feature-label">Protection</div>
+                            <h3 class="home-feature-title">Input controls</h3>
+                            <p class="home-feature-text mb-0">Login-bound workflows, CSRF protection, and rate limiting reduce abuse.</p>
                         </div>
-                        <div class="home-insight-item">
-                            <div class="home-insight-icon"><i class="bi bi-qr-code-scan"></i></div>
-                            <div>
-                                <div class="home-insight-item-title">QR extraction</div>
-                                <div class="home-insight-item-text">Decodes the embedded URL in memory and stores only the extracted link.</div>
-                            </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="home-feature-card h-100" style="background: rgba(15, 23, 42, 0.3); border-color: rgba(148, 163, 184, 0.08);">
+                            <div class="home-feature-label">Clarity</div>
+                            <h3 class="home-feature-title">Explainable output</h3>
+                            <p class="home-feature-text mb-0">Each result includes a score, reasons, and safety tips the user can act on.</p>
                         </div>
-                        <div class="home-insight-item">
-                            <div class="home-insight-icon"><i class="bi bi-lightbulb"></i></div>
-                            <div>
-                                <div class="home-insight-item-title">Human-readable verdicts</div>
-                                <div class="home-insight-item-text">Shows risk score, reasons, and next-step guidance instead of a blind warning.</div>
-                            </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="home-feature-card h-100" style="background: rgba(15, 23, 42, 0.3); border-color: rgba(148, 163, 184, 0.08);">
+                            <div class="home-feature-label">Auditability</div>
+                            <h3 class="home-feature-title">Saved history</h3>
+                            <p class="home-feature-text mb-0">Review past scans and track suspicious patterns over time from one dashboard.</p>
                         </div>
                     </div>
                 </div>
@@ -139,6 +142,14 @@
         </div>
     </section>
 </main>
+
+<script>
+window.addEventListener('load', () => {
+    window.requestAnimationFrame(() => {
+        document.documentElement.classList.remove('page-loading');
+    });
+});
+</script>
 
 {% include 'footer.html' %}
 </body>

@@ -132,15 +132,9 @@ body {
 
 /* ensure dropdown menus render above other navbar surfaces */
 .dropdown-menu {
-    z-index: 1055;
-}
-
-/* On large viewports the main content can create new stacking contexts; ensure navbar dropdowns float above everything */
-.navbar .dropdown-menu,
-.nav-pills-left .dropdown-menu,
-.dropdown-menu.show {
-    z-index: 99999 !important;
-}
+    z-index: 2147483647 !important;
+    /* ensure the menu floats above any stacking context created by page content */
+    position: absolute !important;
 }
 
 .navbar-collapse .nav-pills-left {

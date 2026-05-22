@@ -15,22 +15,98 @@
 
 {% include 'navbar.html' %}
 
-<main class="home-shell container py-5">
+<main class="home-shell container py-4 py-lg-5">
     <section class="home-hero card p-4 p-lg-5">
-        <h1 class="home-title">What would you like to analyze?</h1>
-        <p class="home-lead mb-0">
-            Start with a direct link scan or upload a QR image.
-        </p>
+        <div class="home-hero-orb home-hero-orb-one" aria-hidden="true"></div>
+        <div class="home-hero-orb home-hero-orb-two" aria-hidden="true"></div>
 
-        <div class="row g-4 mt-4">
+        <div class="row align-items-center g-4 g-lg-5 home-hero-content">
+            <div class="col-lg-7">
+                <div class="home-kicker">AI phishing defense platform</div>
+                <h1 class="home-title">Analyze links and QR codes before they can be used against you.</h1>
+                <p class="home-lead">
+                    PhishGuard AI helps you inspect suspicious URLs, decode QR payloads safely, and understand
+                    why a link looks risky with explainable results.
+                </p>
+
+                <div class="home-cta-row">
+                    <a class="btn btn-primary btn-lg home-cta" href="/analyze-link">
+                        <i class="bi bi-link-45deg me-2"></i>Analyze Link
+                    </a>
+                    <a class="btn btn-outline-light btn-lg home-cta" href="/analyze-qr">
+                        <i class="bi bi-qr-code-scan me-2"></i>Analyze QR Code
+                    </a>
+                </div>
+
+                <div class="home-metric-grid mt-4">
+                    <div class="home-metric-card">
+                        <div class="home-metric-value">Explainable</div>
+                        <div class="home-metric-label">risk reasons and safety tips</div>
+                    </div>
+                    <div class="home-metric-card">
+                        <div class="home-metric-value">Secure</div>
+                        <div class="home-metric-label">CSRF, rate limits, URL checks</div>
+                    </div>
+                    <div class="home-metric-card">
+                        <div class="home-metric-value">Fast</div>
+                        <div class="home-metric-label">clear workflow, minimal friction</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="home-insight-panel">
+                    <div class="home-insight-kicker">What the platform checks</div>
+                    <h2 class="home-insight-title">Built to surface threat signals quickly.</h2>
+
+                    <div class="home-insight-list">
+                        <div class="home-insight-item">
+                            <div class="home-insight-icon"><i class="bi bi-shield-check"></i></div>
+                            <div>
+                                <div class="home-insight-item-title">URL safety checks</div>
+                                <div class="home-insight-item-text">Rejects suspicious formats, local targets, and invalid URLs.</div>
+                            </div>
+                        </div>
+                        <div class="home-insight-item">
+                            <div class="home-insight-icon"><i class="bi bi-qr-code-scan"></i></div>
+                            <div>
+                                <div class="home-insight-item-title">QR extraction</div>
+                                <div class="home-insight-item-text">Decodes the embedded URL in memory and stores only the extracted link.</div>
+                            </div>
+                        </div>
+                        <div class="home-insight-item">
+                            <div class="home-insight-icon"><i class="bi bi-lightbulb"></i></div>
+                            <div>
+                                <div class="home-insight-item-title">Human-readable verdicts</div>
+                                <div class="home-insight-item-text">Shows risk score, reasons, and next-step guidance instead of a blind warning.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="home-section mt-5">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+            <div>
+                <div class="home-section-kicker">Quick access</div>
+                <h2 class="home-section-title mb-0">Start the workflow that fits your input.</h2>
+            </div>
+            <p class="home-section-note mb-0">
+                Use the same security controls whether you paste a link or upload a QR image.
+            </p>
+        </div>
+
+        <div class="row g-4">
             <div class="col-lg-6">
                 <a class="home-action-card home-action-link h-100" href="/analyze-link">
                     <div class="home-action-icon">
                         <i class="bi bi-link-45deg"></i>
                     </div>
-                    <div>
+                    <div class="home-action-body">
                         <div class="home-action-title">Analyze Link</div>
-                        <div class="home-action-text">Paste or submit a suspicious URL and run it through the phishing engine.</div>
+                        <div class="home-action-text">Submit a URL for phishing analysis, scoring, and explainable recommendations.</div>
                     </div>
                     <div class="home-action-arrow">
                         <i class="bi bi-arrow-right"></i>
@@ -43,9 +119,9 @@
                     <div class="home-action-icon">
                         <i class="bi bi-qr-code-scan"></i>
                     </div>
-                    <div>
+                    <div class="home-action-body">
                         <div class="home-action-title">Analyze QR Code</div>
-                        <div class="home-action-text">Upload a QR image, extract the embedded URL, and validate it safely.</div>
+                        <div class="home-action-text">Upload a QR image to extract the hidden URL and validate it through the same guardrails.</div>
                     </div>
                     <div class="home-action-arrow">
                         <i class="bi bi-arrow-right"></i>
@@ -55,34 +131,34 @@
         </div>
     </section>
 
-    <section class="home-future mt-5">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+    <section class="home-section mt-5">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
             <div>
-                <div class="home-section-kicker">Ready for expansion</div>
-                <h2 class="home-section-title mb-0">Future feature space</h2>
+                <div class="home-section-kicker">Security first</div>
+                <h2 class="home-section-title mb-0">A safer workflow by design.</h2>
             </div>
         </div>
 
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="home-feature-card h-100">
-                    <div class="home-feature-label">Upcoming</div>
-                    <h3 class="home-feature-title">Behavior timeline</h3>
-                    <p class="home-feature-text mb-0">Compare scans over time and highlight repeated malicious patterns.</p>
+                    <div class="home-feature-label">Protection</div>
+                    <h3 class="home-feature-title">Input controls</h3>
+                    <p class="home-feature-text mb-0">Login-bound workflows, CSRF protection, and rate limiting reduce abuse.</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="home-feature-card h-100">
-                    <div class="home-feature-label">Upcoming</div>
-                    <h3 class="home-feature-title">Bulk analysis</h3>
-                    <p class="home-feature-text mb-0">Process multiple URLs in a controlled batch workflow.</p>
+                    <div class="home-feature-label">Clarity</div>
+                    <h3 class="home-feature-title">Explainable output</h3>
+                    <p class="home-feature-text mb-0">Each result includes a score, reasons, and safety tips the user can act on.</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="home-feature-card h-100">
-                    <div class="home-feature-label">Upcoming</div>
-                    <h3 class="home-feature-title">QR audit history</h3>
-                    <p class="home-feature-text mb-0">Review decoded QR sources and outcomes in one place.</p>
+                    <div class="home-feature-label">Auditability</div>
+                    <h3 class="home-feature-title">Saved history</h3>
+                    <p class="home-feature-text mb-0">Review past scans and track suspicious patterns over time from one dashboard.</p>
                 </div>
             </div>
         </div>

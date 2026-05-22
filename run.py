@@ -1053,6 +1053,9 @@ def signup():
             _require_csrf_token()
             _enforce_rate_limit('signup')
         except (CsrfError, RateLimitError) as exc:
+            if wants_json_response():
+                return jsonify({'error': str(exc)}), 403 if isinstance(exc, CsrfError) else 429
+
             return make_response(str(exc), 403 if isinstance(exc, CsrfError) else 429)
 
         username = request.form['username']
@@ -1078,9 +1081,16 @@ def signup():
         cur.close()
         conn.close()
 
+        if wants_json_response():
+            return jsonify({
+                'status': 'ok',
+                'message': 'Account created. Please sign in.',
+                'next_view': 'login',
+            })
+
         return redirect('/login')
 
-    return render_template('signup.html')
+    return render_template('login.html', auth_view='signup')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -1091,6 +1101,9 @@ def login():
             _require_csrf_token()
             _enforce_rate_limit('login')
         except (CsrfError, RateLimitError) as exc:
+            if wants_json_response():
+                return jsonify({'error': str(exc)}), 403 if isinstance(exc, CsrfError) else 429
+
             return make_response(str(exc), 403 if isinstance(exc, CsrfError) else 429)
 
         email = request.form['email']
@@ -1130,6 +1143,9 @@ def login():
                 session['username'] = username
                 session['is_admin'] = is_admin
 
+                if wants_json_response():
+                    return jsonify({'status': 'ok', 'redirect': '/'})
+
                 return redirect('/')
 
             conn = get_db_connection()
@@ -1148,9 +1164,12 @@ def login():
             cur.close()
             conn.close()
 
+        if wants_json_response():
+            return jsonify({'error': 'Invalid Credentials'}), 401
+
         return "Invalid Credentials"
 
-    return render_template('login.html')
+    return render_template('login.html', auth_view='login')
 
 @app.route('/logout')
 def logout():

@@ -7,6 +7,8 @@
 
 <title>Login</title>
 
+<script>document.documentElement.classList.add('page-loading');</script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link
@@ -19,19 +21,144 @@ href="{{ url_for('static', filename='style.css') }}">
 
 </head>
 
-<body>
+<body class="login-page {% if auth_view == 'signup' %}is-signup{% endif %}" data-auth-view="{{ auth_view|default('login') }}">
 
-<div class="container vh-100 d-flex justify-content-center align-items-center">
+<div class="login-background" aria-hidden="true">
+	<canvas id="login-particles" class="login-particles-canvas"></canvas>
+	<div class="login-vignette"></div>
+</div>
 
-<div class="col-md-5">
+<div class="page-skeleton login-page-skeleton" aria-hidden="true">
+<div class="login-skeleton-shell container-fluid">
+<div class="login-skeleton-grid">
+<section class="login-skeleton-hero">
+<div class="skeleton-chip login-skeleton-chip"></div>
+<div class="skeleton-line mt-4" style="width: 72%;"></div>
+<div class="skeleton-line mt-3" style="width: 88%;"></div>
+<div class="skeleton-line mt-3" style="width: 61%;"></div>
+<div class="login-skeleton-points">
+<div class="login-skeleton-point">
+<div class="skeleton-chip login-skeleton-dot"></div>
+<div class="login-skeleton-lines">
+<div class="skeleton-line" style="width: 66%;"></div>
+<div class="skeleton-line mt-2" style="width: 90%;"></div>
+</div>
+</div>
+<div class="login-skeleton-point">
+<div class="skeleton-chip login-skeleton-dot"></div>
+<div class="login-skeleton-lines">
+<div class="skeleton-line" style="width: 58%;"></div>
+<div class="skeleton-line mt-2" style="width: 82%;"></div>
+</div>
+</div>
+<div class="login-skeleton-point">
+<div class="skeleton-chip login-skeleton-dot"></div>
+<div class="login-skeleton-lines">
+<div class="skeleton-line" style="width: 64%;"></div>
+<div class="skeleton-line mt-2" style="width: 76%;"></div>
+</div>
+</div>
+</div>
+</section>
+<section class="login-skeleton-form">
+<div class="skeleton-chip login-skeleton-pill"></div>
+<div class="skeleton-line mt-4" style="width: 62%;"></div>
+<div class="skeleton-line mt-3" style="width: 84%;"></div>
+<div class="skeleton-line mt-3" style="width: 74%;"></div>
+<div class="skeleton-card mt-4 login-skeleton-card"></div>
+<div class="skeleton-card mt-3 login-skeleton-card short"></div>
+</section>
+</div>
+</div>
+</div>
 
-<div class="card p-5 shadow-lg">
+<main class="login-shell container-fluid page-content">
 
-<h2 class="text-center mb-4">
-Login
+<div class="row g-0 min-vh-100 login-layout">
+
+<section class="col-lg-7 login-hero-panel">
+
+<div class="login-copy">
+
+<div class="login-kicker">Phishing defense workspace</div>
+
+<h1 class="login-title">
+See the threat before it reaches the inbox.
+</h1>
+
+<p class="login-lead">
+PhishGuard AI analyzes suspicious links and QR codes with a security-first workflow.
+It explains why a URL looks risky, keeps QR decoding in memory, and stores only the extracted link for review.
+</p>
+
+<div class="login-points">
+
+<div class="login-point">
+<span class="login-point-marker"></span>
+<div>
+<div class="login-point-title">Link and QR analysis</div>
+<div class="login-point-text">Run direct URL scans or decode QR payloads without exposing raw image data in storage.</div>
+</div>
+</div>
+
+<div class="login-point">
+<span class="login-point-marker"></span>
+<div>
+<div class="login-point-title">Explainable verdicts</div>
+<div class="login-point-text">See risk reasons, safety tips, and a clear phishing score instead of a black-box result.</div>
+</div>
+</div>
+
+<div class="login-point">
+<span class="login-point-marker"></span>
+<div>
+<div class="login-point-title">Safer by design</div>
+<div class="login-point-text">CSRF protection, rate limiting, and URL validation help reduce attacker abuse.</div>
+</div>
+</div>
+
+</div>
+
+<div class="login-stats">
+<div class="login-stat">
+<div class="login-stat-value">URLs</div>
+<div class="login-stat-label">analyzed with security checks</div>
+</div>
+<div class="login-stat">
+<div class="login-stat-value">QR</div>
+<div class="login-stat-label">decoded in-memory only</div>
+</div>
+<div class="login-stat">
+<div class="login-stat-value">Reports</div>
+<div class="login-stat-label">built for clear decision-making</div>
+</div>
+</div>
+
+</div>
+
+</section>
+
+<section class="col-lg-5 login-form-panel d-flex align-items-center justify-content-center">
+
+<div class="login-card card shadow-lg p-4 p-md-5 {% if auth_view == 'signup' %}is-signup{% endif %}" id="auth-card">
+
+<div class="auth-card-inner">
+
+<div class="auth-face auth-face-front" aria-label="Sign in form">
+
+<div class="login-card-badge">Secure sign-in</div>
+
+<h2 class="login-card-title text-center mb-2">
+Login to continue
 </h2>
 
-<form method="POST">
+<p class="login-card-text text-center mb-3">
+Use your account to review scans, compare URLs, and keep your security history in one place.
+</p>
+
+<div class="auth-feedback" id="auth-feedback" aria-live="polite"></div>
+
+<form method="POST" action="/login" data-auth-form="login" id="login-form">
 
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
@@ -67,11 +194,95 @@ Login
 
 </form>
 
+<div class="login-card-footer text-center mt-4">
+
+<div class="login-card-footer-text">New here? Create an account to start scanning.</div>
+
 <div class="text-center mt-3">
 
-<a href="/signup">
+<button type="button" class="auth-switch-link" data-switch-auth="signup">
 Create account
-</a>
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="auth-face auth-face-back" aria-label="Create account form">
+
+<div class="login-card-badge">Create account</div>
+
+<h2 class="login-card-title text-center mb-2">
+Join PhishGuard AI
+</h2>
+
+<p class="login-card-text text-center mb-3">
+Create an account to save your scans, review risk history, and keep phishing checks in one place.
+</p>
+
+<div class="auth-feedback" id="signup-feedback" aria-live="polite"></div>
+
+<form method="POST" action="/signup" data-auth-form="signup" id="signup-form">
+
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+<div class="mb-3">
+
+<input
+type="text"
+name="username"
+class="form-control"
+placeholder="Username"
+autocomplete="username"
+required>
+
+</div>
+
+<div class="mb-3">
+
+<input
+type="email"
+name="email"
+class="form-control"
+placeholder="Email"
+autocomplete="email"
+required>
+
+</div>
+
+<div class="mb-3">
+
+<input
+type="password"
+name="password"
+class="form-control"
+placeholder="Password"
+autocomplete="new-password"
+required>
+
+</div>
+
+<div class="d-grid">
+
+<button type="submit" class="btn btn-primary">
+Signup
+</button>
+
+</div>
+
+</form>
+
+<div class="login-card-footer text-center mt-4">
+
+<div class="login-card-footer-text">Already have an account?</div>
+
+<div class="text-center mt-3">
+
+<button type="button" class="auth-switch-link" data-switch-auth="login">
+Sign in
+</button>
 
 </div>
 
@@ -80,6 +291,288 @@ Create account
 </div>
 
 </div>
+
+</section>
+
+</div>
+
+</main>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js';
+
+const canvas = document.getElementById('login-particles');
+
+if (canvas && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+	const particleCount = window.innerWidth < 768 ? 96 : 180;
+	const starCount = window.innerWidth < 768 ? 240 : 420;
+	const clock = new THREE.Clock();
+	const scene = new THREE.Scene();
+	const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 120);
+	const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'low-power' });
+
+	renderer.setClearColor(0x050816, 0);
+	renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+	renderer.setSize(window.innerWidth, window.innerHeight, false);
+
+	camera.position.set(0, 0, 26);
+	scene.fog = new THREE.FogExp2(0x050816, 0.028);
+
+	const particleGeometry = new THREE.TetrahedronGeometry(0.34, 0);
+	const particleMaterial = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.65 });
+	const particleMesh = new THREE.InstancedMesh(particleGeometry, particleMaterial, particleCount);
+	const particleDummy = new THREE.Object3D();
+	const particleBases = [];
+	const particlePhases = [];
+	const particleSpeeds = [];
+	const particleSizes = [];
+	const particleColors = [];
+
+	for (let index = 0; index < particleCount; index += 1) {
+		const radius = 8 + Math.random() * 16;
+		const theta = Math.random() * Math.PI * 2;
+		const phi = Math.acos((Math.random() * 2) - 1);
+		const base = new THREE.Vector3(
+			radius * Math.sin(phi) * Math.cos(theta),
+			radius * Math.sin(phi) * Math.sin(theta),
+			radius * Math.cos(phi)
+		);
+
+		particleBases.push(base);
+		particlePhases.push(Math.random() * Math.PI * 2);
+		particleSpeeds.push(0.18 + Math.random() * 0.42);
+		particleSizes.push(0.45 + Math.random() * 0.9);
+		
+		// Map particle colors to the slate (#e2e8f0) and blue accent (#3b82f6) theme
+		const isAccent = Math.random() > 0.6;
+		const h = isAccent ? 0.60 + Math.random() * 0.05 : 0.59;
+		const s = isAccent ? 0.8 + Math.random() * 0.2 : 0.2 + Math.random() * 0.1;
+		const l = isAccent ? 0.55 + Math.random() * 0.1 : 0.75 + Math.random() * 0.15;
+		particleColors.push(new THREE.Color().setHSL(h, s, l));
+	}
+
+	for (let index = 0; index < particleCount; index += 1) {
+		particleMesh.setColorAt(index, particleColors[index]);
+	}
+
+	scene.add(particleMesh);
+
+	const starGeometry = new THREE.BufferGeometry();
+	const starPositions = new Float32Array(starCount * 3);
+
+	for (let index = 0; index < starCount; index += 1) {
+		const offset = index * 3;
+		starPositions[offset] = (Math.random() - 0.5) * 120;
+		starPositions[offset + 1] = (Math.random() - 0.5) * 120;
+		starPositions[offset + 2] = (Math.random() - 0.5) * 120;
+	}
+
+	starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+
+	const starMaterial = new THREE.PointsMaterial({ color: 0x9cc9ff, size: 0.06, transparent: true, opacity: 0.55 });
+	const starField = new THREE.Points(starGeometry, starMaterial);
+	scene.add(starField);
+
+	const resizeRenderer = () => {
+		const width = window.innerWidth;
+		const height = window.innerHeight;
+		camera.aspect = width / height;
+		camera.updateProjectionMatrix();
+		renderer.setSize(width, height, false);
+	};
+
+	window.addEventListener('resize', resizeRenderer, { passive: true });
+
+	const tick = () => {
+		const time = clock.getElapsedTime();
+
+		for (let index = 0; index < particleCount; index += 1) {
+			const base = particleBases[index];
+			const phase = particlePhases[index];
+			const speed = particleSpeeds[index];
+			const size = particleSizes[index];
+			const swirl = time * speed + phase;
+
+			particleDummy.position.set(
+				base.x * Math.cos(time * 0.08) - base.z * Math.sin(time * 0.08) + Math.cos(swirl) * 1.6,
+				base.y + Math.sin(time * 0.55 + phase) * 1.1,
+				base.x * Math.sin(time * 0.08) + base.z * Math.cos(time * 0.08) + Math.sin(swirl * 0.85) * 1.6
+			);
+			particleDummy.rotation.set(time * 0.35 + phase, time * 0.22 + phase * 0.5, time * 0.18 + phase * 0.8);
+			particleDummy.scale.setScalar(size);
+			particleDummy.updateMatrix();
+			particleMesh.setMatrixAt(index, particleDummy.matrix);
+		}
+
+		particleMesh.instanceMatrix.needsUpdate = true;
+		starField.rotation.y = time * 0.03;
+		starField.rotation.x = Math.sin(time * 0.08) * 0.04;
+
+		camera.position.x = Math.sin(time * 0.15) * 1.4;
+		camera.position.y = Math.sin(time * 0.11) * 0.7;
+		camera.lookAt(0, 0, 0);
+
+		renderer.render(scene, camera);
+		window.requestAnimationFrame(tick);
+	};
+
+	tick();
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+	const authCard = document.getElementById('auth-card');
+	const loginForm = document.getElementById('login-form');
+	const signupForm = document.getElementById('signup-form');
+	const feedbackTargets = {
+		login: document.getElementById('auth-feedback'),
+		signup: document.getElementById('signup-feedback'),
+	};
+
+	if (!authCard || !loginForm || !signupForm) {
+		return;
+	}
+
+	const switchLinks = Array.from(document.querySelectorAll('[data-switch-auth]'));
+	const loginFields = Array.from(loginForm.querySelectorAll('input:not([type="hidden"])'));
+	const signupFields = Array.from(signupForm.querySelectorAll('input:not([type="hidden"])'));
+
+	const clearMessages = () => {
+		Object.values(feedbackTargets).forEach((element) => {
+			if (!element) {
+				return;
+			}
+
+			element.textContent = '';
+			element.classList.remove('is-error', 'is-success');
+		});
+	};
+
+	const clearForms = () => {
+		loginForm.reset();
+		signupForm.reset();
+
+		[...loginFields, ...signupFields].forEach((field) => {
+			if ('value' in field) {
+				field.value = '';
+			}
+		});
+	};
+
+	const focusCurrentView = (view) => {
+		const targetForm = view === 'signup' ? signupForm : loginForm;
+		const firstField = targetForm.querySelector('input:not([type="hidden"])');
+
+		if (firstField) {
+			window.requestAnimationFrame(() => {
+				firstField.focus({ preventScroll: true });
+			});
+		}
+	};
+
+	const setMessage = (view, text, state) => {
+		const target = feedbackTargets[view];
+
+		if (!target) {
+			return;
+		}
+
+		target.textContent = text || '';
+		target.classList.toggle('is-error', state === 'error');
+		target.classList.toggle('is-success', state === 'success');
+	};
+
+	const setView = (view, options = {}) => {
+		const nextView = view === 'signup' ? 'signup' : 'login';
+		authCard.classList.toggle('is-signup', nextView === 'signup');
+		document.body.classList.toggle('is-signup', nextView === 'signup');
+		document.body.dataset.authView = nextView;
+
+		if (options.clear !== false) {
+			clearForms();
+			clearMessages();
+		}
+
+		focusCurrentView(nextView);
+	};
+
+	const parseResponse = async (response) => {
+		const contentType = response.headers.get('content-type') || '';
+
+		if (contentType.includes('application/json')) {
+			return response.json();
+		}
+
+		return { message: await response.text() };
+	};
+
+	const submitForm = async (form) => {
+		const view = form.dataset.authForm === 'signup' ? 'signup' : 'login';
+		const payload = new FormData(form);
+
+		clearMessages();
+
+		try {
+			const response = await fetch(form.action, {
+				method: 'POST',
+				body: payload,
+				headers: {
+					'X-Requested-With': 'XMLHttpRequest',
+					'Accept': 'application/json',
+				},
+				credentials: 'same-origin',
+			});
+
+			const data = await parseResponse(response);
+
+			if (!response.ok) {
+				setMessage(view, data.error || data.message || 'Request failed. Please try again.', 'error');
+				return;
+			}
+
+			if (view === 'login') {
+				clearForms();
+				window.location.assign(data.redirect || '/');
+				return;
+			}
+
+			setView('login', { clear: false });
+			clearForms();
+			setMessage('login', data.message || 'Account created. Please sign in.', 'success');
+		} catch (error) {
+			setMessage(view, 'Unable to submit right now. Please try again.', 'error');
+		}
+	};
+
+	switchLinks.forEach((link) => {
+		link.addEventListener('click', (event) => {
+			event.preventDefault();
+			setView(link.dataset.switchAuth || 'login');
+		});
+	});
+
+	loginForm.addEventListener('submit', (event) => {
+		event.preventDefault();
+		submitForm(loginForm);
+	});
+
+	signupForm.addEventListener('submit', (event) => {
+		event.preventDefault();
+		submitForm(signupForm);
+	});
+
+	setView(document.body.dataset.authView || 'login', { clear: false });
+});
+</script>
+
+<script>
+window.addEventListener('load', () => {
+	window.requestAnimationFrame(() => {
+		document.documentElement.classList.remove('page-loading');
+	});
+});
+</script>
 
 </body>
 </html>

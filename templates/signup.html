@@ -19,7 +19,7 @@ href="{{ url_for('static', filename='style.css') }}">
 
 </head>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
 
 <div class="container vh-100 d-flex justify-content-center align-items-center">
 
@@ -90,5 +90,6 @@ Already have account?
 
 </div>
 
+{% include 'footer.html' %}
 </body>
 </html>

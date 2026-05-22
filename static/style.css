@@ -2706,3 +2706,23 @@ html.page-loading .login-background {
         transition: none !important;
     }
 }
+
+/* Global Footer */
+.site-footer {
+    border-top: 1px solid rgba(148, 163, 184, 0.08);
+    background: rgba(7, 12, 24, 0.4);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    position: relative;
+    z-index: 10;
+}
+
+.footer-copyright {
+    color: #64748b;
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+}
+
+.tracking-wide {
+    letter-spacing: 0.05em;
+}

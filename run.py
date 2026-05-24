@@ -7,6 +7,10 @@ import secrets
 import time
 from urllib.parse import urlparse
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from flask import Flask, request, render_template, redirect, session, make_response, jsonify
 from PIL import Image, UnidentifiedImageError
 from PIL.Image import DecompressionBombError
@@ -21,8 +25,9 @@ from app.security import login_required, admin_required
 
 app = Flask(__name__)
 
-# For production, set PHISHGUARD_SECRET_KEY to a strong random value.
-app.secret_key = os.environ.get('PHISHGUARD_SECRET_KEY', 'dev-insecure-change-me')
+app.secret_key = os.getenv("SECRET_KEY")
+
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024
 

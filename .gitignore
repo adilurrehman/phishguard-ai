@@ -1,15 +1,5 @@
 venv/
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
 .env
-.env.*
-server.log
-logs/
-dummy/
-dataset/
-ml_model/
-.vscode/
-uploads/*
-!uploads/.gitkeep
+uploads/

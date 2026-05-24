@@ -1,6 +1,6 @@
 import os
 
-import psycopg2
+from database import get_db_connection as _get_db_connection
 
 def _ensure_schema(conn):
 
@@ -56,6 +56,6 @@ def _ensure_schema(conn):
     cur.close()
 
 def get_db_connection():
-    return psycopg2.connect(
-        os.getenv("DATABASE_URL")
-    )
+    conn = _get_db_connection()
+    _ensure_schema(conn)
+    return conn

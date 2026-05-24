@@ -95,8 +95,8 @@ It is **not** an autonomous cybersecurity AI. It requires deliberate human revie
    - F1-score (harmonic mean)
    - False positive rate (critical for security)
 7. Saves versioned model (`model_v1.pkl`, `model_v2.pkl`, etc.)
-8. Writes metrics report (`logs/model_metrics.json`)
-9. Updates latest alias (`ml_model/phishing_model.pkl`)
+8. Writes metrics report (`model/model_metrics.json`)
+9. Updates latest alias (`model/phishing_model.pkl`)
 
 **Frequency:** Manual / scheduled (not automatic)
 
@@ -110,7 +110,7 @@ It is **not** an autonomous cybersecurity AI. It requires deliberate human revie
 
 ### 5. Feature Engineering
 
-**File:** `ml_model/live_features.py`
+**File:** `model/live_features.py`
 
 **Current feature set (40 features):**
 
@@ -183,7 +183,7 @@ It is **not** an autonomous cybersecurity AI. It requires deliberate human revie
    - Not accuracy: misleading in imbalanced datasets.
 
 4. **Metrics Persistence**
-   - Each retrain writes `logs/model_metrics.json`.
+   - Each retrain writes `model/model_metrics.json`.
    - Track performance trends over time.
 
 5. **Feature Integrity**
@@ -200,7 +200,7 @@ It is **not** an autonomous cybersecurity AI. It requires deliberate human revie
 ## Typical Workflow
 
 ### Day 1: Initial Deployment
-- Use pre-trained model (`phishing_model.pkl`).
+- Use pre-trained model (`model/phishing_model.pkl`).
 - Users scan URLs, get predictions.
 - Some predictions are wrong (expected).
 - Users submit feedback via "Correct / Incorrect" buttons.
@@ -216,7 +216,7 @@ It is **not** an autonomous cybersecurity AI. It requires deliberate human revie
 - New model trained, metrics written.
 - Admins check metrics: did precision improve? FP rate lower?
 - If yes, deploy `model_v2.pkl` as latest.
-- If no, stay with `model_v1.pkl`.
+- If no, stay with `model/model_v1.pkl`.
 
 ### Weeks 3+: Continuous Improvement
 - Cycle repeats.

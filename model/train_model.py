@@ -1,11 +1,15 @@
+from pathlib import Path
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 import joblib
 
+BASE_DIR = Path(__file__).resolve().parent
+
 # Load dataset
-data = pd.read_csv('../dataset/phishing.csv')
+data = pd.read_csv(BASE_DIR / 'phishing.csv')
 
 # Selected features
 features = [
@@ -54,4 +58,4 @@ accuracy = accuracy_score(y_test, predictions)
 print("Accuracy:", accuracy)
 
 # Save
-joblib.dump(model, 'phishing_model.pkl')
+joblib.dump(model, BASE_DIR / 'phishing_model.pkl')

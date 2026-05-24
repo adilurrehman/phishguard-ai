@@ -9,15 +9,16 @@ from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_
 from sklearn.model_selection import train_test_split
 
 from app.db import get_db_connection
-from feature_extractor import extract_features
-from ml_model.live_features import FEATURE_COLUMNS
+from model.feature_extraction import extract_features
+from model.live_features import FEATURE_COLUMNS
 
 
 BASE_DIR = Path(__file__).resolve().parent
-ORIGINAL_DATASET_PATH = BASE_DIR / 'dataset' / 'phishing.csv'
-MODEL_OUTPUT_PATH = BASE_DIR / 'ml_model' / 'phishing_model.pkl'
+MODEL_DIR = BASE_DIR / 'model'
+ORIGINAL_DATASET_PATH = MODEL_DIR / 'phishing.csv'
+MODEL_OUTPUT_PATH = MODEL_DIR / 'phishing_model.pkl'
 MODEL_VERSION_GLOB = 'model_v*.pkl'
-METRICS_OUTPUT_PATH = BASE_DIR / 'logs' / 'model_metrics.json'
+METRICS_OUTPUT_PATH = MODEL_DIR / 'model_metrics.json'
 
 def _get_next_model_version(model_dir):
     version_numbers = []

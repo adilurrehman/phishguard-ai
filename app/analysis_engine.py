@@ -1,7 +1,9 @@
-import joblib
+from pathlib import Path
 from urllib.parse import urlparse
 
-from ml_model.live_features import LEGACY_FEATURE_COLUMNS, extract_feature_vector
+import joblib
+
+from model.live_features import LEGACY_FEATURE_COLUMNS, extract_feature_vector
 from app.domain_age_check import check_domain_age
 from app.brand_impersonation import detect_brand_impersonation
 from app.entropy_analysis import analyze_domain_entropy
@@ -10,8 +12,10 @@ from app.explanations import generate_reasons
 from app.tld_analysis import analyze_tld
 from app.safety_tips import get_safety_tips
 
+BASE_DIR = Path(__file__).resolve().parents[1]
+MODEL_PATH = BASE_DIR / 'model' / 'phishing_model.pkl'
 
-model = joblib.load('ml_model/phishing_model.pkl')
+model = joblib.load(MODEL_PATH)
 
 # Small curated list used to reduce risk for well-known trusted providers
 TRUSTED_DOMAINS = [

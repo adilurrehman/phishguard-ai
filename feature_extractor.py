@@ -1,1 +1,1 @@
-from ml_model.feature_extraction import extract_features
+from model.feature_extraction import extract_features

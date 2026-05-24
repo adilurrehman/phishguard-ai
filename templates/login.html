@@ -18,18 +18,7 @@ rel="stylesheet">
 <link
 rel="stylesheet"
 href="{{ url_for('static', filename='style.css') }}">
-<link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicons/favicon.ico') }}">
-<link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicons/favicon-16x16.png') }}">
-<link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicons/favicon-32x32.png') }}">
-<link rel="icon" type="image/png" sizes="48x48" href="{{ url_for('static', filename='favicons/favicon-48x48.png') }}">
-<link rel="icon" type="image/png" sizes="64x64" href="{{ url_for('static', filename='favicons/favicon-64x64.png') }}">
-<link rel="icon" type="image/png" sizes="128x128" href="{{ url_for('static', filename='favicons/favicon-128x128.png') }}">
-<link rel="icon" type="image/png" sizes="256x256" href="{{ url_for('static', filename='favicons/favicon-256x256.png') }}">
-<link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='favicons/favicon-512x512.png') }}">
-<link rel="apple-touch-icon" sizes="57x57" href="{{ url_for('static', filename='favicons/apple-touch-icon-57x57.png') }}">
-<link rel="apple-touch-icon" sizes="114x114" href="{{ url_for('static', filename='favicons/apple-touch-icon-114x114.png') }}">
-<link rel="apple-touch-icon" sizes="120x120" href="{{ url_for('static', filename='favicons/apple-touch-icon-120x120.png') }}">
-<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='favicons/apple-touch-icon.png') }}">
+{% include '_favicon_links.html' %}
 
 <style>
     .learn-about-3d-btn {
@@ -44,7 +33,6 @@ href="{{ url_for('static', filename='style.css') }}">
         border-top: 1px solid rgba(255, 255, 255, 0.3);
         border-radius: 12px;
         text-decoration: none;
-		-webkit-backdrop-filter: blur(12px);
         backdrop-filter: blur(12px);
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -75,7 +63,6 @@ href="{{ url_for('static', filename='style.css') }}">
         border-top: 1px solid rgba(255, 255, 255, 0.3);
         border-radius: 12px;
         text-decoration: none;
-		-webkit-backdrop-filter: blur(12px);
         backdrop-filter: blur(12px);
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -93,19 +80,6 @@ href="{{ url_for('static', filename='style.css') }}">
     .sign-in-3d-btn:hover i {
         transform: translateX(4px);
     }
-
-	.login-skeleton-w-72 { width: 72%; }
-	.login-skeleton-w-88 { width: 88%; }
-	.login-skeleton-w-61 { width: 61%; }
-	.login-skeleton-w-66 { width: 66%; }
-	.login-skeleton-w-90 { width: 90%; }
-	.login-skeleton-w-58 { width: 58%; }
-	.login-skeleton-w-82 { width: 82%; }
-	.login-skeleton-w-64 { width: 64%; }
-	.login-skeleton-w-76 { width: 76%; }
-	.login-skeleton-w-62 { width: 62%; }
-	.login-skeleton-w-84 { width: 84%; }
-	.login-skeleton-w-74 { width: 74%; }
 </style>
 
 </head>
@@ -122,38 +96,38 @@ href="{{ url_for('static', filename='style.css') }}">
 <div class="login-skeleton-grid">
 <section class="login-skeleton-hero">
 <div class="skeleton-chip login-skeleton-chip"></div>
-<div class="skeleton-line mt-4 login-skeleton-w-72"></div>
-<div class="skeleton-line mt-3 login-skeleton-w-88"></div>
-<div class="skeleton-line mt-3 login-skeleton-w-61"></div>
+<div class="skeleton-line mt-4" style="width: 72%;"></div>
+<div class="skeleton-line mt-3" style="width: 88%;"></div>
+<div class="skeleton-line mt-3" style="width: 61%;"></div>
 <div class="login-skeleton-points">
 <div class="login-skeleton-point">
 <div class="skeleton-chip login-skeleton-dot"></div>
 <div class="login-skeleton-lines">
-<div class="skeleton-line login-skeleton-w-66"></div>
-<div class="skeleton-line mt-2 login-skeleton-w-90"></div>
+<div class="skeleton-line" style="width: 66%;"></div>
+<div class="skeleton-line mt-2" style="width: 90%;"></div>
 </div>
 </div>
 <div class="login-skeleton-point">
 <div class="skeleton-chip login-skeleton-dot"></div>
 <div class="login-skeleton-lines">
-<div class="skeleton-line login-skeleton-w-58"></div>
-<div class="skeleton-line mt-2 login-skeleton-w-82"></div>
+<div class="skeleton-line" style="width: 58%;"></div>
+<div class="skeleton-line mt-2" style="width: 82%;"></div>
 </div>
 </div>
 <div class="login-skeleton-point">
 <div class="skeleton-chip login-skeleton-dot"></div>
 <div class="login-skeleton-lines">
-<div class="skeleton-line login-skeleton-w-64"></div>
-<div class="skeleton-line mt-2 login-skeleton-w-76"></div>
+<div class="skeleton-line" style="width: 64%;"></div>
+<div class="skeleton-line mt-2" style="width: 76%;"></div>
 </div>
 </div>
 </div>
 </section>
 <section class="login-skeleton-form">
 <div class="skeleton-chip login-skeleton-pill"></div>
-<div class="skeleton-line mt-4 login-skeleton-w-62"></div>
-<div class="skeleton-line mt-3 login-skeleton-w-84"></div>
-<div class="skeleton-line mt-3 login-skeleton-w-74"></div>
+<div class="skeleton-line mt-4" style="width: 62%;"></div>
+<div class="skeleton-line mt-3" style="width: 84%;"></div>
+<div class="skeleton-line mt-3" style="width: 74%;"></div>
 <div class="skeleton-card mt-4 login-skeleton-card"></div>
 <div class="skeleton-card mt-3 login-skeleton-card short"></div>
 </section>

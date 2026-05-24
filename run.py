@@ -773,6 +773,11 @@ def history():
     )
 
 
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
 @app.route('/developer')
 @login_required
 def developer():

@@ -12,7 +12,10 @@
     <div class="container page-content">
         <div class="footer-content text-center">
             <div class="footer-logo mb-2">
-                <span class="fw-bold text-white tracking-wide">PhishGuard <span class="text-primary opacity-75">AI</span></span>
+                <a class="footer-brand d-inline-flex align-items-center gap-2 text-decoration-none" href="/">
+                    <img src="{{ url_for('static', filename='images/darkthemelogo.webp') }}" alt="PhishGuard AI" class="footer-brand-mark" width="28" height="28">
+                    <span class="fw-bold text-white tracking-wide">PhishGuard <span class="text-primary opacity-75">AI</span></span>
+                </a>
             </div>
             <p class="footer-copyright mb-0">
                 &copy; <script>document.write(new Date().getFullYear())</script> PhishGuard AI. All rights reserved.

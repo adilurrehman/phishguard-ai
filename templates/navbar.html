@@ -2,8 +2,9 @@
 
 <div class="container-fluid">
 
-    <a class="navbar-brand fw-bold mb-0" href="/">
-        PhishGuard AI
+    <a class="navbar-brand fw-bold mb-0 d-inline-flex align-items-center gap-2" href="/">
+        <img src="{{ url_for('static', filename='images/darkthemelogo.webp') }}" alt="PhishGuard AI" class="brand-mark" width="36" height="36">
+        <span class="brand-wordmark">PhishGuard <span class="text-primary opacity-75">AI</span></span>
     </a>
 
     <button class="navbar-toggler relaxed-toggler collapsed"
@@ -24,6 +25,7 @@
 
         <div class="navbar-nav nav-pills-left ms-lg-auto mt-3 mt-lg-0">
 
+            {% if session.get('user_id') %}
             <a class="nav-link navbar-pill-link" href="/">
                 Home
             </a>
@@ -45,6 +47,7 @@
             <a class="nav-link navbar-pill-link" href="/history">
                 History
             </a>
+            {% endif %}
 
             <div class="nav-item dropdown">
                 <a class="nav-link navbar-pill-link dropdown-toggle" href="#" id="aboutDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -64,9 +67,15 @@
 
             {% endif %}
 
+            {% if session.get('user_id') %}
             <a class="nav-link navbar-pill-link navbar-pill-danger" href="/logout">
                 Logout
             </a>
+            {% else %}
+            <a class="nav-link navbar-pill-link" style="background-color: rgba(59, 130, 246, 0.2); color: #60a5fa;" href="/login">
+                Login
+            </a>
+            {% endif %}
 
         </div>
 

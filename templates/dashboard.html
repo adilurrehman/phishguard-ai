@@ -22,7 +22,18 @@
     <link
     rel="stylesheet"
     href="{{ url_for('static', filename='style.css') }}">
-    {% include '_favicon_links.html' %}
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicons/favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicons/favicon-16x16.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicons/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="48x48" href="{{ url_for('static', filename='favicons/favicon-48x48.png') }}">
+    <link rel="icon" type="image/png" sizes="64x64" href="{{ url_for('static', filename='favicons/favicon-64x64.png') }}">
+    <link rel="icon" type="image/png" sizes="128x128" href="{{ url_for('static', filename='favicons/favicon-128x128.png') }}">
+    <link rel="icon" type="image/png" sizes="256x256" href="{{ url_for('static', filename='favicons/favicon-256x256.png') }}">
+    <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='favicons/favicon-512x512.png') }}">
+    <link rel="apple-touch-icon" sizes="57x57" href="{{ url_for('static', filename='favicons/apple-touch-icon-57x57.png') }}">
+    <link rel="apple-touch-icon" sizes="114x114" href="{{ url_for('static', filename='favicons/apple-touch-icon-114x114.png') }}">
+    <link rel="apple-touch-icon" sizes="120x120" href="{{ url_for('static', filename='favicons/apple-touch-icon-120x120.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='favicons/apple-touch-icon.png') }}">
 
 </head>
 
@@ -32,7 +43,7 @@
 
 <div class="container my-5 pb-4 page-skeleton dashboard-skeleton" aria-hidden="true">
 
-    <div class="skeleton-card mb-4" style="height: 2.8rem; width: 18rem;"></div>
+    <div class="skeleton-card mb-4 skeleton-dashboard-title"></div>
 
     <div class="row g-4">
 
@@ -58,7 +69,7 @@
 
     <div class="skeleton-card">
 
-        <div class="skeleton-line" style="width: 36%;"></div>
+        <div class="skeleton-line skeleton-w-36"></div>
         <div class="skeleton-table-row mt-4"></div>
         <div class="skeleton-table-row"></div>
         <div class="skeleton-table-row"></div>

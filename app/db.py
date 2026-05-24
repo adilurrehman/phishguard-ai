@@ -1,3 +1,5 @@
+import os
+
 import psycopg2
 
 def _ensure_schema(conn):
@@ -54,14 +56,6 @@ def _ensure_schema(conn):
     cur.close()
 
 def get_db_connection():
-
-    conn = psycopg2.connect(
-        host="localhost",
-        database="phishguard_db",
-        user="postgres",
-        password="Adilkakar420@"
+    return psycopg2.connect(
+        os.getenv("DATABASE_URL")
     )
-
-    _ensure_schema(conn)
-
-    return conn

@@ -502,7 +502,7 @@ def feedback():
     conn.close()
 
     if wants_json_response():
-        return jsonify({"status": "ok"})
+        return jsonify({"status": "ok", "message": "Thank you for your feedback!"})
 
     return redirect('/')
 
@@ -1074,22 +1074,44 @@ def signup():
 
         hashed_password = hash_password(password)
 
-        conn = get_db_connection()
-        cur = conn.cursor()
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
 
-        cur.execute(
-            """
-            INSERT INTO users
-            (username, email, password_hash)
-            VALUES (%s, %s, %s)
-            """,
-            (username, email, hashed_password)
-        )
+            cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+            if cur.fetchone():
+                cur.close()
+                conn.close()
+                if wants_json_response():
+                    return jsonify({'error': 'An account with this email already exists.'}), 409
+                return make_response('An account with this email already exists.', 409)
 
-        conn.commit()
+            cur.execute(
+                """
+                INSERT INTO users
+                (username, email, password_hash)
+                VALUES (%s, %s, %s)
+                """,
+                (username, email, hashed_password)
+            )
 
-        cur.close()
-        conn.close()
+            conn.commit()
+
+            cur.close()
+            conn.close()
+
+            if wants_json_response():
+                return jsonify({'success': 'Account created successfully'}), 201
+            
+            flash('Account created successfully! Please log in.', 'success')
+            return redirect(url_for('login'))
+
+        except psycopg2.Error as e:
+            # Log the error for debugging
+            app.logger.error(f"Database error during signup: {e}")
+            if wants_json_response():
+                return jsonify({'error': 'A database error occurred. Please try again later.'}), 500
+            return make_response('A database error occurred. Please try again later.', 500)
 
         if wants_json_response():
             return jsonify({
@@ -1119,22 +1141,28 @@ def login():
         email = request.form['email']
         password = request.form['password']
 
-        conn = get_db_connection()
-        cur = conn.cursor()
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
 
-        cur.execute(
-            """
-            SELECT id, username, password_hash, is_admin
-            FROM users
-            WHERE email = %s
-            """,
-            (email,)
-        )
+            cur.execute(
+                """
+                SELECT id, username, password_hash, is_admin
+                FROM users
+                WHERE email = %s
+                """,
+                (email,)
+            )
 
-        user = cur.fetchone()
+            user = cur.fetchone()
 
-        cur.close()
-        conn.close()
+            cur.close()
+            conn.close()
+        except psycopg2.Error as e:
+            app.logger.error(f"Database error during login: {e}")
+            if wants_json_response():
+                return jsonify({'error': 'A database error occurred. Please try again later.'}), 500
+            return make_response('A database error occurred. Please try again later.', 500)
 
         if user:
 
@@ -1154,7 +1182,7 @@ def login():
                 session['is_admin'] = is_admin
 
                 if wants_json_response():
-                    return jsonify({'status': 'ok', 'redirect': '/'})
+                    return jsonify({'status': 'ok', 'next_view': ''})
 
                 return redirect('/')
 

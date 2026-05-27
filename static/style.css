@@ -2678,6 +2678,33 @@ html.page-loading .login-background {
     text-decoration: underline;
 }
 
+.btn.is-loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+}
+
+.btn.is-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin-top: -10px;
+    margin-left: -10px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 @media (max-width: 991.98px) {
     .login-hero-panel,
     .login-form-panel,
@@ -3143,4 +3170,38 @@ html.page-loading .login-background {
 [data-theme="light"] .about-skeleton-card {
     background: #ffffff !important;
     border-color: #e2e8f0 !important;
+}
+
+/* Optimistic UI Popup */
+.optimistic-popup {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 16px;
+    z-index: 1050;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 300px;
+}
+
+.optimistic-popup.success {
+    background-color: #28a745;
+}
+
+.optimistic-popup.error {
+    background-color: #dc3545;
+}
+
+.optimistic-popup button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    margin-left: 20px;
+    cursor: pointer;
 }

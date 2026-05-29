@@ -1,6 +1,7 @@
 from pathlib import Path
 from urllib.parse import urlparse
 
+import os
 import joblib
 
 from model.live_features import LEGACY_FEATURE_COLUMNS, extract_feature_vector
@@ -12,8 +13,9 @@ from app.explanations import generate_reasons
 from app.tld_analysis import analyze_tld
 from app.safety_tips import get_safety_tips
 
-BASE_DIR = Path(__file__).resolve().parents[1]
-MODEL_PATH = BASE_DIR / 'model' / 'phishing_model.pkl'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+MODEL_PATH = os.path.join(BASE_DIR, '..', 'model', 'phishing_model.pkl')
 
 model = joblib.load(MODEL_PATH)
 

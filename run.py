@@ -29,7 +29,7 @@ app.secret_key = os.getenv("SECRET_KEY")
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 
 Image.MAX_IMAGE_PIXELS = 4_000_000
 
@@ -428,6 +428,21 @@ def request_entity_too_large(error):
         template_name = 'index.html'
 
     return render_template(template_name, error=message), 413
+
+
+@app.errorhandler(403)
+def forbidden(e):
+    return render_template('403.html'), 403
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return render_template('404.html'), 404
+
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('500.html'), 500
 
 
 @app.route('/feedback', methods=['POST'])
@@ -1235,4 +1250,4 @@ def logout():
     return redirect('/login')
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=False)
+    app.run()

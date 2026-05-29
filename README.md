@@ -5,7 +5,7 @@
 ![License](https://img.shields.io/badge/license-Unspecified-lightgrey.svg)
 ![Build](https://img.shields.io/badge/build-manual-yellow.svg)
 
-PhishGuard AI is an open, production-focused phishing detection tool that combines feature-rich URL analysis, machine learning predictions, and human‑in‑the‑loop feedback to help users and teams detect suspicious and phishing links quickly and explainably..
+PhishGuard AI is an open, production-focused phishing detection tool that combines feature-rich URL analysis, machine learning predictions, and human‑in‑the‑loop feedback to help users and teams detect suspicious and phishing links quickly and explainably.
 
 ---
 

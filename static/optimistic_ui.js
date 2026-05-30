@@ -83,12 +83,12 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         const loginForm = document.querySelector('form[action="/login"]');
-        if (loginForm) {
+        if (loginForm && !loginForm.hasAttribute('data-auth-form')) {
             handleFormSubmit(loginForm, true);
         }
 
         const signupForm = document.querySelector('form[action="/signup"]');
-        if (signupForm) {
+        if (signupForm && !signupForm.hasAttribute('data-auth-form')) {
             handleFormSubmit(signupForm, true);
         }
 

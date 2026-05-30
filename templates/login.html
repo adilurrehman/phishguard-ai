@@ -579,11 +579,23 @@ document.addEventListener('DOMContentLoaded', () => {
 		return { message: await response.text() };
 	};
 
+	const setFormLoadingState = (form, isLoading) => {
+		const submitButton = form.querySelector('button[type="submit"]');
+
+		if (submitButton) {
+			submitButton.classList.toggle('is-loading', isLoading);
+			submitButton.disabled = isLoading;
+		}
+
+		form.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+	};
+
 	const submitForm = async (form) => {
 		const view = form.dataset.authForm === 'signup' ? 'signup' : 'login';
 		const payload = new FormData(form);
 
 		clearMessages();
+		setFormLoadingState(form, true);
 
 		try {
 			const response = await fetch(form.action, {
@@ -614,6 +626,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			setMessage('login', data.message || 'Account created. Please sign in.', 'success');
 		} catch (error) {
 			setMessage(view, 'Unable to submit right now. Please try again.', 'error');
+		} finally {
+			setFormLoadingState(form, false);
 		}
 	};
 
